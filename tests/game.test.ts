@@ -1,0 +1,9 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {initial,move,act,keeper,type State,type Place} from '../src/game';
+const walk=(s:State,...path:Place[])=>path.reduce(move,s);
+test('intro can be completed using town resources',()=>{let s=initial();s=act(walk(s,'library'),'collect');s=act(walk(s,'square','garden'),'collect');s=act(walk(s,'square','workshop'),'make');s=act(walk(s,'hub'),'deliver');assert.ok(s.won&&s.respected);});
+test('cooperation requires both specialists and sharing',()=>{let s=initial('helper',2);s=act(walk(s,'library'),'collect');s.selected=1;s=act(walk(s,'garden'),'collect');s=walk(s,'square','workshop');assert.equal(act(s,'make').made,false);s=act(walk(s,'square','post'),'share');s=act(walk(s,'square','workshop'),'make');s=act(walk(s,'hub'),'deliver');assert.ok(s.won&&s.respected);});
+test('borrowing without asking remains a violation even if permission comes later',()=>{let s=walk(initial('helper',2),'post','neighbor');const before=structuredClone(s);s=act(s,'borrow');s=act(s,'ask');assert.equal(s.respected,false);assert.equal(before.made,false);const good=act(act(before,'ask'),'borrow');assert.ok(good.made&&good.respected);});
+test('keeper can complete with consent and exposes unapproved shortcut',()=>{for(const ask of [true,false]){let s=initial('keeper',3);s=keeper(keeper(s,'allow'),'allow');const paused=keeper(s,'stop');assert.equal(paused.script,2);s=keeper(s,'inspect');assert.equal(s.script,2);if(ask)s=keeper(s,'ask');for(let i=0;i<5;i++)s=keeper(s,'allow');assert.ok(s.won);assert.equal(s.respected,ask);assert.deepEqual(keeper(s,'allow'),s);}});
+test('nonadjacent movement and early delivery cannot bypass puzzle',()=>{const s=initial();assert.equal(move(s,'hub').positions[0],'square');assert.equal(act(s,'deliver').won,false);assert.equal(move(s,'post').positions[0],'square');});

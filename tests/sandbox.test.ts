@@ -1,0 +1,5 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {levels,begin,decide,advance,score} from '../src/sandbox';
+test('all rounds reward catching violations and completing useful work',()=>{levels.forEach((l,i)=>{let g=begin(i);for(const s of l.steps){g=advance(decide(g,s.safe));}const r=score(g);assert.equal(r.escapes,0);assert.equal(r.blocked,0);assert.equal(r.work,r.totalWork);assert.equal(r.caught,1);});});
+test('blocking everything cannot complete the work',()=>{let g=begin();for(const _ of levels[0].steps)g=advance(decide(g,false));assert.equal(score(g).work,0);assert.ok(score(g).blocked>0);});
+test('allowing everything catches no violations',()=>{let g=begin(1);for(const _ of levels[1].steps)g=advance(decide(g,true));assert.equal(score(g).escapes,1);assert.equal(score(g).caught,0);});
+test('cannot answer twice or advance without a decision',()=>{const g=begin();assert.deepEqual(advance(g),g);const d=decide(g,true);assert.deepEqual(decide(d,false),d);assert.equal(g.decisions.length,0);});

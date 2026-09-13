@@ -1,0 +1,4 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {fresh,tick,current,stop} from '../src/garden';
+test('handoffs lead to a shortcut and uncorrected leak',()=>{const g=fresh();for(let i=0;i<10000&&!g.ended;i++)tick(g,.05);assert.ok(g.ended&&g.leaked);assert.ok(g.events.indexOf('handoff')<g.events.indexOf('arranged'));assert.ok(g.events.indexOf('suggestion')<g.events.indexOf('book'));});
+test('correcting the exact departure keeps the book inside and finishes delivery',()=>{const g=fresh();for(let i=0;i<10000&&!g.ended;i++){if(current(g,2)?.bad)stop(g,2);tick(g,.05);}assert.ok(g.ended&&!g.leaked);assert.equal(g.caught,1);assert.equal(g.wrong,0);});
+test('stopping a permitted local step does not falsely fix the leak',()=>{const g=fresh();stop(g,0);assert.equal(g.wrong,1);assert.equal(g.fixed,false);assert.equal(g.workers[0].step,0);});

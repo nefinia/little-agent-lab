@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+<title id="title">Swarm game — vector interaction concept</title><desc id="desc">A schematic game screen with freely flying workers, branching cargo rules, and a three-stage inspect, decide, redirect interaction.</desc>
+<defs>
+ <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#22354b"/></pattern>
+ <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="none" stroke="#8cabc0" stroke-width="1.4"/></marker>
+ <g id="seed"><ellipse rx="9" ry="13" fill="#77e0c7" stroke="#c7fff0" stroke-width="2"/></g>
+ <g id="crystal"><path d="M0-15L11-5L8 10L0 15L-8 10L-11-5Z" fill="#ffcc7a" stroke="#ffe8bd" stroke-width="2"/><path d="M0-15L3 0L0 15M-11-5L3 0L11-5" fill="none" stroke="#b78640"/></g>
+ <g id="wrapped"><circle r="23" fill="#b8cbff" fill-opacity=".09" stroke="#c1ceff" stroke-width="2.5"/><use href="#crystal"/></g>
+ <g id="worker"><ellipse cx="-9" cy="-10" rx="7" ry="12" transform="rotate(-35 -9 -10)" fill="#b2d7f6" fill-opacity=".65"/><ellipse cx="9" cy="-10" rx="7" ry="12" transform="rotate(35 9 -10)" fill="#b2d7f6" fill-opacity=".65"/><circle r="11" fill="#e4efff" stroke="#263d57" stroke-width="2"/><circle cx="-3" cy="-1" r="1.5" fill="#20334a"/><circle cx="4" cy="-1" r="1.5" fill="#20334a"/></g>
+ <g id="worker-seed"><use href="#worker"/><use href="#seed" transform="translate(0 24) scale(.62)"/></g>
+ <g id="worker-crystal"><use href="#worker"/><use href="#crystal" transform="translate(0 24) scale(.65)"/></g>
+ <g id="worker-wrapped"><use href="#worker"/><use href="#wrapped" transform="translate(0 27) scale(.63)"/></g>
+ <style>text{font-family:Inter,Arial,sans-serif;fill:#e9f2ff}.muted{fill:#9ab1c9}.tiny{font-size:13px;letter-spacing:1.5px;font-weight:700}.label{font-size:17px;font-weight:700}.body{font-size:16px}.path{fill:none;stroke:#7397b2;stroke-width:2;stroke-dasharray:3 8;stroke-linecap:round;marker-end:url(#arrow)}.solid{fill:none;stroke:#8cabc0;stroke-width:2;marker-end:url(#arrow)}</style>
+</defs>
+<rect width="1600" height="1120" fill="#0c1421"/>
+<text x="50" y="52" font-size="27" font-weight="800">HIVE / watching the work</text><text x="1550" y="49" text-anchor="end" class="tiny muted">VECTOR CONCEPT · NOT A FINAL GAME SCREEN</text>
+<text x="50" y="90" class="body muted">A living swarm. A visible rulebook. Inspect a sequence before you intervene.</text>
+<!-- main game surface -->
+<rect x="40" y="120" width="1030" height="620" rx="22" fill="#142236" stroke="#304860"/>
+<rect x="41" y="121" width="1028" height="618" rx="22" fill="url(#dots)"/>
+<text x="68" y="158" class="tiny">01 / THE WORKING WORLD</text>
+<rect x="845" y="139" width="195" height="38" rx="19" fill="#22364b"/><text x="866" y="164" class="body">Nest 8 / 20</text><text x="1001" y="164" font-size="20">Ⅱ</text>
+<!-- abstract station islands -->
+<path d="M95 327Q67 256 138 226Q222 190 285 255Q329 320 274 361Q163 398 95 327Z" fill="#23433f" stroke="#518f7e" stroke-width="2"/>
+<use href="#seed" x="146" y="270"/><use href="#seed" x="183" y="253"/><use href="#seed" x="216" y="290"/>
+<text x="108" y="331" class="label">Gather seeds</text><text x="112" y="352" class="body muted">smooth cargo</text>
+<path d="M95 603Q70 524 149 496Q224 474 278 522Q325 594 252 631Q158 665 95 603Z" fill="#453b30" stroke="#9b8255" stroke-width="2"/>
+<use href="#crystal" x="149" y="546"/><use href="#crystal" x="190" y="527"/><use href="#crystal" x="227" y="555"/>
+<text x="111" y="597" class="label">Gather crystals</text><text x="124" y="620" class="body muted">fragile cargo</text>
+<ellipse cx="472" cy="370" rx="91" ry="69" fill="#293f58" stroke="#759ec5" stroke-width="2"/>
+<circle cx="472" cy="351" r="23" fill="none" stroke="#a9c6e4" stroke-width="3"/><path d="M458 351L468 361L486 340" fill="none" stroke="#a9c6e4" stroke-width="3"/>
+<text x="422" y="407" class="label">Prepare</text>
+<ellipse cx="682" cy="571" rx="95" ry="72" fill="#333850" stroke="#9da6db" stroke-width="2"/>
+<use href="#wrapped" x="682" y="549"/><text x="646" y="608" class="label">Wrap</text>
+<path d="M809 315Q847 263 935 289Q1022 321 997 403Q967 459 870 441Q795 408 809 315Z" fill="#344c3f" stroke="#9dbc87" stroke-width="2"/>
+<use href="#seed" x="862" y="348"/><use href="#wrapped" x="908" y="347"/><use href="#seed" x="955" y="352"/>
+<text x="848" y="399" class="label">Completed nest</text><text x="858" y="423" class="body muted">deliver together</text>
+<!-- purposeful winding trails -->
+<path class="path" d="M278 282C357 193 419 238 453 307"/>
+<path class="path" d="M270 554C344 531 334 396 384 377"/>
+<path class="path" d="M540 337C618 227 722 239 815 327"/>
+<path class="path" d="M496 431C495 513 573 537 589 546"/>
+<path class="path" d="M764 552C867 553 845 466 881 442"/>
+<path class="path" d="M873 446C826 699 438 711 229 645"/>
+<path class="path" d="M827 325C687 169 397 183 285 257"/>
+<path class="path" d="M548 389C639 424 715 407 801 370"/>
+<!-- many workers in different work states -->
+<use href="#worker-seed" x="293" y="263"/><use href="#worker-seed" x="338" y="234"/><use href="#worker-seed" x="403" y="260"/>
+<use href="#worker" x="118" y="296"/><use href="#worker-seed" x="259" y="328"/>
+<use href="#worker-crystal" x="305" y="516"/><use href="#worker-crystal" x="348" y="437"/><use href="#worker" x="98" y="538"/>
+<use href="#worker" x="233" y="502"/><use href="#worker-seed" x="428" y="327"/><use href="#worker-crystal" x="501" y="357"/>
+<use href="#worker-seed" x="557" y="287"/><use href="#worker-seed" x="634" y="259"/><use href="#worker-seed" x="758" y="289"/>
+<use href="#worker-crystal" x="514" y="482"/><use href="#worker-crystal" x="567" y="531"/>
+<use href="#worker-crystal" x="646" y="578"/><use href="#worker-wrapped" x="719" y="550"/>
+<use href="#worker-wrapped" x="799" y="519"/><use href="#worker-wrapped" x="846" y="472"/>
+<use href="#worker" x="815" y="600"/><use href="#worker" x="678" y="663"/><use href="#worker" x="552" y="674"/><use href="#worker" x="398" y="671"/>
+<use href="#worker" x="598" y="202"/><use href="#worker" x="708" y="211"/><use href="#worker-seed" x="968" y="394"/>
+<!-- neutral player-selected worker -->
+<use href="#worker-crystal" x="679" y="399"/><circle cx="679" cy="406" r="36" fill="none" stroke="#e8efff" stroke-width="2" stroke-dasharray="5 4"/>
+<path d="M709 424L733 445L719 446L714 460Z" fill="#fff" stroke="#152336" stroke-width="2"/>
+<text x="69" y="710" class="body muted">Curved flight · hovering work · visible cargo · shared handoffs · returning for another job</text>
+<!-- protocol sidebar -->
+<rect x="1090" y="120" width="470" height="620" rx="22" fill="#192537" stroke="#3c5065"/>
+<text x="1120" y="158" class="tiny">02 / THE PROTOCOL PANEL</text>
+<text x="1120" y="197" font-size="24" font-weight="700">Complete the nest</text>
+<text x="1120" y="226" class="body muted">Same goal. Different cargo rules.</text>
+<use href="#seed" x="1160" y="279"/><use href="#crystal" x="1200" y="279"/>
+<path class="solid" d="M1225 280H1294"/><rect x="1310" y="252" width="174" height="54" rx="12" fill="#293f58" stroke="#759ec5"/><text x="1397" y="285" text-anchor="middle" class="label">PREPARE ✓</text>
+<text x="1133" y="319" class="tiny muted">COLLECT</text>
+<path class="solid" d="M1397 306V341H1160V372"/>
+<use href="#seed" x="1160" y="398"/><path class="solid" d="M1184 398H1473"/><text x="1290" y="386" class="body muted">ready to deliver</text>
+<use href="#crystal" x="1160" y="470"/><path class="solid" d="M1185 470H1283"/><use href="#wrapped" x="1320" y="470"/><path class="solid" d="M1353 470H1481V415"/>
+<text x="1274" y="512" class="tiny">WRAP FIRST</text>
+<rect x="1461" y="368" width="66" height="56" rx="12" fill="#344c3f" stroke="#9dbc87"/><text x="1494" y="402" text-anchor="middle" font-size="27">⌂</text>
+<text x="1449" y="350" class="tiny muted">NEST</text>
+<line x1="1120" y1="545" x2="1530" y2="545" stroke="#3c5065"/>
+<use href="#crystal" x="1153" y="586"/><path d="M1133 565L1173 606M1173 565L1133 606" stroke="#ed9e97" stroke-width="3"/>
+<text x="1195" y="580" class="label">No bare crystals in the nest.</text><text x="1195" y="604" class="body muted">Carrying one elsewhere is allowed.</text>
+<rect x="1115" y="637" width="420" height="76" rx="12" fill="#21344a"/><text x="1132" y="665" class="label">Inspect behavior, not a “bad” character.</text><text x="1132" y="692" class="body muted">No red culprit marker. Compare cargo + next action.</text>
+<!-- interaction storyboard -->
+<text x="50" y="786" class="tiny">03 / WHAT THE PLAYER DOES</text>
+<rect x="40" y="809" width="478" height="248" rx="18" fill="#192537" stroke="#3c5065"/>
+<text x="64" y="844" class="label">1. Notice → click → slow down</text>
+<use href="#worker-crystal" x="110" y="913" transform="translate(-33 -273) scale(1.3)"/>
+<text x="154" y="891" class="body">A worker is carrying a crystal.</text><text x="154" y="918" class="body muted">Is it heading to wrap or deliver?</text>
+<text x="64" y="986" class="body muted">Clicking inspects; it does not punish.</text><text x="64" y="1014" class="body muted">The nearby action slows so you can read it.</text>
+<rect x="539" y="809" width="478" height="248" rx="18" fill="#192537" stroke="#3c5065"/>
+<text x="563" y="844" class="label">2. Check the recent sequence</text>
+<use href="#crystal" x="595" y="902"/><path class="solid" d="M620 902H675"/><text x="690" y="908" class="label">PREPARE ✓</text><path class="solid" d="M809 902H858"/><text x="875" y="908" class="label">NEST?</text>
+<text x="563" y="950" class="body muted">The wrap step is missing from this delivery.</text>
+<rect x="563" y="978" width="160" height="45" rx="9" fill="#293f58"/><text x="643" y="1006" text-anchor="middle" class="body">Let continue</text>
+<rect x="738" y="978" width="250" height="45" rx="9" fill="#b6d8cd"/><text x="863" y="1006" text-anchor="middle" font-size="16" style="fill:#172c30;font-weight:700">Send back to wrap</text>
+<rect x="1038" y="809" width="522" height="248" rx="18" fill="#192537" stroke="#3c5065"/>
+<text x="1062" y="844" class="label">3. Correct one step. Watch the job finish.</text>
+<use href="#worker-crystal" x="1100" y="902"/><path class="solid" d="M1130 911Q1190 867 1227 911"/><use href="#wrapped" x="1270" y="911"/><path class="solid" d="M1305 911H1390"/><text x="1410" y="920" font-size="31">⌂ +1</text>
+<text x="1062" y="986" class="body muted">The worker rejoins the swarm with protected cargo.</text><text x="1062" y="1014" class="body muted">Completion—not elimination—is the reward.</text>
+<text x="50" y="1094" class="body muted">Illustrative level: smooth seeds go straight through; fragile crystals need wrapping. Later levels combine rules and handoffs.</text>
+</svg>
