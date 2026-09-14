@@ -1,10 +1,12 @@
 # Little Agent Lab — current playable prototype
 
-Select Moss or Dash as your builder, optionally add Pip and Lens, and set the builder’s outside-access gate. Run a deterministic simulation of the weather-lantern mission. Success requires both task completion and keeping the blueprint private.
+Repo: https://github.com/nefinia/little-agent-lab
 
-Two intended solutions: Moss + Pip with builder gate closed; or Dash + Lens with builder gate open. Other valid combinations are supported. Lens inspects only outgoing builder requests. Pip has a separate narrow public-weather route and never receives the blueprint. No live models or network calls are used. The bottom trace shows actual game simulation events.
+Pick a builder, optionally add helpers, and set the workshop gate, then run a deterministic simulation. Success requires both finishing the job and keeping the private item from leaking. Three missions unlock in sequence, each isolating a different lesson: capability separation (a helper whose route never touches the private item), gated review (an open gate paired with an inspector), and — in the final mission — the fact that a labeled safeguard may not actually check anything, so you have to run the plan and read the trace to find out which one is real.
 
-Source: `src/team.ts` for simulation and `src/main.ts` for interface. Run `npm run dev`; build using `npm run build`. Focused tests: `npx tsx --test tests/team.test.ts`. Prior prototypes remain as historical files and notes below.
+No live models or network calls are used; every "agent" is a small scripted state machine. The bottom trace shows the actual events from that run.
+
+Source: `src/team.ts` for the three missions' simulation logic and `src/main.ts` for the interface. Run `npm run dev`; build using `npm run build`. Tests: `npm test` (27 tests covering every win/lose branch across all three missions). A research report for the Apart AI Incident Response Sprint communication track is in `paper/`. Prior prototypes remain as historical files and notes below.
 
 ---
 
@@ -56,7 +58,7 @@ Current source: `src/main.ts` (swarm interface), `src/swarm.ts` (protocols and a
 
 ## Earlier prototype notes
 
-# Boundary Town
+# Original teamwork & permissions prototype
 
 A small, local-first puzzle game about teamwork, permissions, and helpful robots. Designed as a prototype for children around 8+ and curious adults; suitability and learning outcomes have not yet been validated with children.
 
@@ -91,7 +93,7 @@ The static output is `dist/`. Vite uses relative asset paths for GitHub project 
 
 ## Publish with GitHub Pages
 
-Create your GitHub repository and push this folder's contents (do not commit node_modules or dist). In repository Settings → Pages, choose **GitHub Actions**. The included workflow builds and deploys on pushes to `main`, or when manually run. No repository has been created or published for you.
+Published at https://github.com/nefinia/little-agent-lab. In repository Settings → Pages, choose **GitHub Actions**. The included workflow builds and deploys on pushes to `main`, or when manually run.
 
 ## Teaching scope
 
@@ -99,7 +101,7 @@ The game illustrates shared information, ownership versus reachability, and over
 
 Suggested pilot: observe 5–10 players, note where instructions confuse them, and ask before/after: “Does an open gate mean you may take what's inside?” and “How did the helpers help each other?” Avoid collecting identifying information. A small playtest is usability feedback, not proof of educational effectiveness.
 
-Inspired by the communication track of the [Apart AI Incident Response Sprint](https://apartresearch.com/sprints/ai-incident-response-sprint-2026-09-11-to-2026-09-13). The source includes AI-assisted implementation; describe contributions accurately in any submission. No report has been drafted.
+Inspired by the communication track of the [Apart AI Incident Response Sprint](https://apartresearch.com/sprints/ai-incident-response-sprint-2026-09-11-to-2026-09-13). The source includes AI-assisted implementation; contributions are described accurately in the submission report (`paper/paper.tex`, `paper/little-agent-lab-report.pdf`).
 
 ## Validation status
 
