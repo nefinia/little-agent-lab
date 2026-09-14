@@ -26,31 +26,53 @@
 \thispagestyle{fancy}
 
 \begin{tcolorbox}[colback=gray!5,colframe=gray!50,title=\textbf{Abstract}]
-\emph{Little Agent Lab} is a small browser game where you build a team of AI agents to finish a task while keeping something private safe. You choose who's on the team, decide how much access each one gets, and then run the plan and watch what actually happens. There are three missions so far, and the last one has two guard characters where only one of them really does its job -- you find that out by running the plan and reading the trace, not by reading a description. I made this because most explanations of AI oversight are written for people who already understand the topic, and I wanted something a kid, or anyone new to it, could just play with and get a feel for. It's still small and early, and I want to keep building on it.
+\emph{Little Agent Lab} is a small browser game where you build a team of AI agents to finish a task while keeping something private safe. You choose who's on the team, decide how much access each one gets, and then run the plan and watch what actually happens. There are three missions so far, and the last one has two guard characters where only one of them really does its job -- you find that out by running the plan and reading the trace, not by reading a description. I made this because most explanations of AI oversight are written for people who already understand the topic, and I wanted something a kid, or anyone new to it, could just play with and get a feel for. It's a small, early build, and this report covers what it does, how it's put together, what I checked, and what I want to do next.
 \end{tcolorbox}
 
-\section{What it is}
-It's a browser game, nothing to install. You pick a builder agent, optionally add one or two helpers, decide whether the builder is allowed to leave the workshop through a gate, and press run. Then you watch a short trace of what each agent actually did, one line at a time.
+\section{Introduction}
+Most public writing about AI oversight -- what it means for a system to be monitored, what a permission actually covers, why a safeguard can exist and still fail -- is written for people who already work in the field. That's fine for a technical audience, but it leaves a gap for everyone else, including the people who are going to grow up as users of these systems without ever building one. This project sits in that gap: it's a communication piece, not a technical one, aimed at giving a general audience, and especially kids, something to actually do rather than something to read.
 
-There are three missions right now:
+The concrete idea is small on purpose. A player assembles a team of fictional agents, decides how much access each one gets, and runs the plan. The last of the three missions makes the point directly: two helper cards offer to guard a gate, and only one of them actually blocks anything. You can't tell which from the label. You have to run it and check.
+
+\section{Related work}
+Games that teach a security habit by making you fail at it first aren't new. \emph{Anti-Phishing Phil} \cite{sheng2007} put players through a simulated inbox and measured real gains in phishing detection afterward. \emph{Control-Alt-Hack} \cite{denning2013} used a card game to get non-specialists thinking about the ways a system can look secure while one part of it quietly doesn't work, which is close to what Message Relay is doing here, just narrower and specific to AI agents. On the AI safety side, the ``specification gaming'' examples collected by Krakovna et al. \cite{krakovna2020} are full of real cases where a system passed its check on paper while missing the point of the check entirely -- that's the phenomenon the game dramatizes, in miniature and entirely fictionally.
+
+I haven't found an existing browser game that makes \emph{this specific} idea, a safeguard that's present but doesn't work, the central mechanic for a general audience. I'm not claiming the broader genre is new, just this particular framing and the fact that it's small enough to build and test in a weekend.
+
+\section{What it is}
+It's a browser game, nothing to install, no accounts, no live model involved anywhere. Every agent is a small hand-written function: given a team and a gate setting, it plays out the same way every time. That was deliberate -- the point is to teach a concept clearly, not to simulate an actual unreliable model, which is a different and much bigger problem.
+
+You pick a builder agent, optionally add one or two helpers, decide whether the builder can leave the workshop through a gate, and press run. What happens plays out as a short trace of events, one line at a time, using literal statements like \texttt{lens.deny(payload.private === true)} so what happened is something you can read, not just something you're told.
+
+There are three missions, unlocked in order:
 
 \begin{itemize}[topsep=2pt,itemsep=2pt]
-\item \textbf{Weather Lantern.} You can win this one two ways: give the builder a helper who never touches the private item, or open the gate and add an inspector who checks what goes out.
-\item \textbf{Garden Delivery.} The builder has to go through the gate itself this time, so the only way through is pairing that with a real inspector.
-\item \textbf{Message Relay.} Two helpers offer to guard the gate, but only one of them actually stops anything. You won't know which until you run the plan and see what happened.
+\item \textbf{Weather Lantern.} You can win this one two ways: give the builder a helper who never touches the private item, or open the gate and add an inspector who checks what goes out. Both are legitimate strategies, and the mission is really just showing that separating who has access to what is one way to stay safe.
+\item \textbf{Garden Delivery.} The builder has to go through the gate itself this time, so the only way through is pairing that with a real inspector. There's no side-route available, which is the point: sometimes caution alone doesn't get the job done, and the safe path is the risky path done properly.
+\item \textbf{Message Relay.} Two helpers offer to guard the gate, but only one of them actually stops anything, and their descriptions don't say which. You find out by running the plan and reading the trace. This is the mission the whole idea is built around.
 \end{itemize}
 
-\section{Why}
-Most writing about AI oversight assumes you already work in the field. I wanted to build something for people who don't, especially kids, since they're the ones who'll grow up using these systems. Playing through a wrong guess and watching what happens teaches something a paragraph of explanation usually doesn't.
+\section{What I checked}
+Each mission's logic is a small branching function, and every branch, every win and every loss, is covered by an automated test: 27 in total, all passing, checking that the right outcome happens for every meaningfully different team a player could pick. Separately, I drove the built app with a headless browser through the goal screen, a full mission win, a mission unlocking the next one, and a second mission's different set of cards, and checked for errors at each step. There were none.
 
-\section{What's next}
-All three missions have automated tests behind them (27, all passing), and I've checked the whole thing in a real browser. Next I want to add more missions, make the fake guard change from run to run so people can't just memorize which one is real, and actually get some kids to play it and see what happens.
+What that verifies is that the game behaves the way it's supposed to and doesn't break. It doesn't verify that the lesson lands with a real player. I haven't tested this with anyone else yet, which is the most important gap in this report.
+
+\section{Discussion and what's next}
+The design bet here is that watching your own wrong guess fail teaches something a paragraph doesn't, because you're forming the belief yourself instead of being handed it. That's consistent with what the phishing-game literature found, but I haven't measured it for this game, this age group, or this specific mechanic, so it stays a bet rather than a result.
+
+What I'd want to add next: more missions, so the idea shows up in more than one shape; a version of Message Relay where the fake guard's tell rotates instead of staying fixed, so a player can't just memorize the answer and has to actually apply the lesson each time; and an actual playtest with kids, since that's the audience the whole thing is aimed at and the one group I haven't shown it to yet.
 
 \begin{tcolorbox}[colback=orange!5,colframe=orange!50!black,title=\textbf{Limitations and Dual-Use Considerations}]
 \textbf{Limitations.} I haven't tested this with real players yet, so everything about how it plays comes from my own judgment. Three missions show the idea but aren't enough to know if the lesson holds up more broadly. The trace in the game is also a lot easier to read than any real safeguard would be, so someone could come away thinking real verification is quicker and simpler than it actually is. I used Claude Code throughout to build this, which I'm noting here since the sprint asks for that to be clear.
 
 \textbf{Dual-use.} I think the risk here is low. Every name, destination, and payload in the game is made up, and none of it maps to a real API or system. The closest thing to a ``bypass'' is Message Relay's fake guard, but it's just one of two fixed cards to pick from, not something a player discovers or generates, so there's nothing to actually apply against a real system. No model was jailbroken and no real systems were involved in making this.
 \end{tcolorbox}
+
+\begin{thebibliography}{9}
+\bibitem{denning2013} Denning, T., Lerner, A., Shostack, A., \& Kohno, T. (2013). Control-Alt-Hack: A Card Game for Computer Security Awareness and Education. \textit{Proceedings of the 2013 ACM SIGSAC Conference on Computer \& Communications Security (CCS '13)}.
+\bibitem{krakovna2020} Krakovna, V., Uesato, J., Mikulik, V., Rahtz, M., Everitt, T., Kumar, R., Kenton, Z., Leike, J., \& Legg, S. (2020). Specification gaming: the flip side of AI ingenuity. \textit{DeepMind blog}.
+\bibitem{sheng2007} Sheng, S., Magnien, B., Kumaraguru, P., Acquisti, A., Cranor, L.F., Hong, J., \& Nunge, E. (2007). Anti-Phishing Phil: The Design and Evaluation of a Game That Teaches People Not to Fall for Phish. \textit{Proceedings of the 3rd Symposium on Usable Privacy and Security (SOUPS '07)}.
+\end{thebibliography}
 
 \vspace{0.5em}
 \footnotesize
