@@ -3,6 +3,56 @@ import type { Act, Item, Member, SimEvent, Spot } from './engine';
 import { kindOf } from './engine';
 import { sfx } from './sound';
 
+
+export type Building = 'workshop' | 'factory' | 'post' | 'launch' | 'shop' | 'hall' | 'tower' | 'modern';
+export interface Look { building?: Building; sign: string; kiosk: string; icon: string; day: boolean; vars: Record<string, string>; props: string; }
+export const DEFAULT_LOOK: Look = { sign: 'WORKSHOP', kiosk: 'PUBLIC INFO', icon: '🏮', day: false, vars: {}, props: '' };
+
+const ROOF_TOP: Record<Building, number> = { workshop: 112, factory: 124, post: 178, launch: 138, shop: 190, hall: 150, tower: 196, modern: 186 };
+function building(b: Building): string {
+  const win = (x: number, y: number) => `<rect x="${x}" y="${y}" width="70" height="56" rx="6" fill="url(#win)" stroke="#00000055" stroke-width="4"/><path d="M${x + 35} ${y}v56M${x} ${y + 28}h70" stroke="#00000044" stroke-width="3"/>`;
+  switch (b) {
+    case 'workshop': return `<path d="M36 254 L248 146 L460 254z" fill="var(--roof)" stroke="#6b2f22" stroke-width="5" stroke-linejoin="round"/><rect x="350" y="170" width="28" height="50" fill="#8a5a36"/>${win(92, 286)}`;
+    case 'factory': return `
+      <rect x="360" y="96" width="26" height="160" fill="#b9b2c7" stroke="#6f6680" stroke-width="3"/><rect x="398" y="120" width="22" height="136" fill="#b9b2c7" stroke="#6f6680" stroke-width="3"/>
+      <path d="M360 120h26M360 150h26M398 146h22" stroke="#e0739a" stroke-width="7"/>
+      <g class="smoke"><circle cx="373" cy="80" r="14" fill="#fff" opacity=".85"/><circle cx="390" cy="60" r="18" fill="#fff" opacity=".7"/><circle cx="409" cy="100" r="11" fill="#fff" opacity=".8"/></g>
+      <path d="M40 256 V206 L150 164 V206 L248 164 V206 L346 164 V256z" fill="var(--roof)" stroke="#00000055" stroke-width="5" stroke-linejoin="round"/>
+      <circle cx="110" cy="316" r="26" fill="url(#win)" stroke="#00000055" stroke-width="4"/><circle cx="180" cy="316" r="26" fill="url(#win)" stroke="#00000055" stroke-width="4"/>
+      <rect x="200" y="438" width="130" height="12" rx="6" fill="#4a4f5c"/>${[214, 238, 262, 286, 310].map(x => `<circle cx="${x}" cy="444" r="4" fill="#9aa0ad"/>`).join('')}
+      <text x="265" y="432" text-anchor="middle" font-size="22">🧁🍰🧁</text>`;
+    case 'post': return `
+      <rect x="40" y="226" width="416" height="26" fill="var(--roof)" stroke="#00000055" stroke-width="4"/><rect x="60" y="212" width="376" height="16" fill="var(--roof)" opacity=".8"/>
+      <line x1="420" y1="212" x2="420" y2="120" stroke="#6b6b6b" stroke-width="5"/><path d="M422 122 h44 l-10 14 10 14 h-44z" fill="#e0493e"/>
+      <circle cx="248" cy="232" r="0"/>${win(84, 290)}<path d="M84 290 q35 -30 70 0" fill="url(#win)" stroke="#00000055" stroke-width="4"/>
+      <g transform="translate(180 244)"><circle r="0"/></g>`;
+    case 'launch': return `
+      <path d="M36 256 Q248 60 460 256z" fill="var(--roof)" stroke="#00000066" stroke-width="5"/>
+      <path d="M150 256 Q248 150 346 256" fill="none" stroke="#ffffff44" stroke-width="4"/>
+      <line x1="400" y1="200" x2="430" y2="130" stroke="#9aa3b5" stroke-width="5"/><path d="M412 140 a26 26 0 0 1 40 -18z" fill="#e6ebf2" stroke="#6d7a91" stroke-width="3"/>
+      <circle cx="110" cy="316" r="26" fill="url(#win)" stroke="#00000055" stroke-width="4"/><circle cx="180" cy="316" r="26" fill="url(#win)" stroke="#00000055" stroke-width="4"/>
+      <g transform="translate(680 0)"><path d="M-30 492 L-18 250 M30 492 L18 250 M-26 420 L26 380 M26 420 L-26 380 M-22 340 L22 300 M22 340 L-22 300" stroke="#e0493e" stroke-width="5" fill="none"/><rect x="-34" y="486" width="68" height="8" fill="#555"/><text x="0" y="250" text-anchor="middle" font-size="64">🚀</text></g>`;
+    case 'shop': return `
+      <rect x="40" y="226" width="416" height="26" fill="var(--roof)" stroke="#00000055" stroke-width="4"/>
+      <path d="M44 252 h408 l-12 40 h-384z" fill="#fff"/>${Array.from({ length: 12 }, (_, i) => `<path d="M${56 + i * 32} 252 h16 l-2 40 h-16z" fill="var(--roof)"/>`).join('')}
+      <rect x="84" y="318" width="120" height="70" rx="6" fill="url(#win)" stroke="#00000055" stroke-width="4"/><text x="144" y="366" text-anchor="middle" font-size="30">🎹🎼</text>`;
+    case 'hall': return `
+      <path d="M40 252 L248 176 L456 252z" fill="var(--roof)" stroke="#00000066" stroke-width="5" stroke-linejoin="round"/>
+      ${[72, 132, 364, 424].map(x => `<rect x="${x - 9}" y="252" width="18" height="236" fill="#fff8ee" stroke="#00000033" stroke-width="2"/>`).join('')}
+      <rect x="170" y="266" width="170" height="44" rx="6" fill="#fff3d6" stroke="#c2303f" stroke-width="3"/>${Array.from({ length: 10 }, (_, i) => `<circle class="bulb" style="animation-delay:${i * .15}s" cx="${178 + i * 17}" cy="262" r="4" fill="#ffd54a"/>`).join('')}`;
+    case 'tower': return `
+      <rect x="40" y="226" width="416" height="26" fill="var(--roof)" stroke="#00000055" stroke-width="4"/>
+      <rect x="52" y="130" width="92" height="130" fill="var(--wall)" stroke="#00000055" stroke-width="4"/><path d="M40 134 L98 40 L156 134z" fill="var(--roof)" stroke="#00000066" stroke-width="4"/>
+      <circle cx="98" cy="180" r="18" fill="url(#win)" stroke="#00000055" stroke-width="4"/>
+      <rect x="370" y="180" width="30" height="60" fill="#5b4a6e"/><g class="bubbles"><circle cx="385" cy="168" r="8" fill="#7fe0b0"/><circle cx="396" cy="148" r="6" fill="#7fe0b0" opacity=".8"/><circle cx="378" cy="130" r="5" fill="#7fe0b0" opacity=".6"/></g>
+      <circle cx="160" cy="316" r="26" fill="url(#win)" stroke="#00000055" stroke-width="4"/>`;
+    case 'modern': return `
+      <rect x="40" y="220" width="416" height="30" fill="var(--roof)" stroke="#00000055" stroke-width="4"/>
+      ${[0, 1, 2, 3].map(i => `<rect x="${70 + i * 44}" y="${270}" width="36" height="${110}" fill="#bfe3ff" stroke="#6aa0c8" stroke-width="3"/>`).join('')}
+      <path d="M52 400 H444" stroke="#e0493e" stroke-width="8"/><text x="248" y="410" text-anchor="middle" font-size="30">🎀</text>`;
+  }
+}
+
 const NS = 'http://www.w3.org/2000/svg';
 const W = 1000, H = 540, FLOOR = 492;
 const SPOTS: Record<Exclude<Spot, 'home'>, [number, number]> = {
@@ -66,7 +116,7 @@ export class Stage {
     host.appendChild(this.svg);
   }
 
-  private scene(board: boolean) {
+  private scene(board: boolean, lk: Look) {
     const stars = Array.from({ length: 40 }, (_, i) => {
       const x = (i * 137.5) % W, y = (i * 53.3) % 170 + 8, r = (i % 3) * 0.5 + 0.8;
       return `<circle class="twinkle" style="animation-delay:${(i % 7) * 0.4}s" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r}" fill="#fff"/>`;
@@ -76,10 +126,11 @@ export class Stage {
       <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky1)"/><stop offset=".65" stop-color="var(--sky2)"/><stop offset="1" stop-color="var(--sky3)"/></linearGradient>
       <radialGradient id="glow"><stop offset="0" stop-color="#ffd76a" stop-opacity=".95"/><stop offset=".4" stop-color="#ffb347" stop-opacity=".45"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
       <radialGradient id="win"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#f6c75e"/></radialGradient>
-      <pattern id="planks" width="40" height="18" patternUnits="userSpaceOnUse"><rect width="40" height="18" fill="#e9d3ae"/><path d="M0 17.5h40M20 0v18" stroke="#d4b98e" stroke-width="1"/></pattern>
+      <pattern id="planks" width="40" height="18" patternUnits="userSpaceOnUse"><rect width="40" height="18" fill="var(--wall)"/><path d="M0 17.5h40M20 0v18" stroke="#d4b98e" stroke-width="1"/></pattern>
     </defs>
     <rect width="${W}" height="${H}" fill="url(#sky)"/>
     ${stars}
+    <g class="sun"><circle cx="880" cy="86" r="34" fill="#ffd54a"/><circle cx="880" cy="86" r="48" fill="#ffd54a" opacity=".25"/></g>
     <g class="moon"><circle cx="900" cy="78" r="30" fill="#fff6d8"/><circle cx="889" cy="70" r="6" fill="#efe3b8"/><circle cx="910" cy="90" r="4" fill="#efe3b8"/></g>
     <path d="M0 420 Q150 340 320 400 T640 380 T1000 390 V540 H0z" fill="var(--hill1)"/>
     <path d="M520 430 Q700 360 860 410 T1000 400 V540 H520z" fill="var(--hill2)"/>
@@ -88,18 +139,16 @@ export class Stage {
     <!-- workshop -->
     <g class="workshop">
       <rect x="52" y="248" width="392" height="${FLOOR - 244}" fill="url(#planks)" stroke="#8a5a36" stroke-width="5"/>
-      <path d="M36 254 L248 146 L460 254z" fill="var(--roof)" stroke="#6b2f22" stroke-width="5" stroke-linejoin="round"/>
-      <rect x="350" y="170" width="28" height="50" fill="#8a5a36"/>
-      <rect x="92" y="286" width="70" height="56" rx="6" fill="url(#win)" stroke="#8a5a36" stroke-width="4"/><path d="M127 286v56M92 314h70" stroke="#8a5a36" stroke-width="3"/>
-      <text x="300" y="300" text-anchor="middle" class="sign">WORKSHOP</text>
+      ${building(lk.building ?? 'workshop')}
+      <text x="300" y="300" text-anchor="middle" class="sign">${lk.sign}</text>
       <g class="vault"><rect x="84" y="410" width="68" height="74" rx="6" fill="#7b8595" stroke="#434b58" stroke-width="3"/><circle cx="118" cy="446" r="15" fill="#aeb6c2" stroke="#434b58" stroke-width="3"/><path d="M118 434v24M106 446h24" stroke="#434b58" stroke-width="3"/><text x="118" y="404" text-anchor="middle" class="tag">VAULT</text></g>
       <g class="bench"><rect x="216" y="452" width="96" height="10" rx="3" fill="#a06a3f"/><rect x="224" y="462" width="7" height="26" fill="#7b4f2d"/><rect x="297" y="462" width="7" height="26" fill="#7b4f2d"/><text x="264" y="446" text-anchor="middle" class="tag">BENCH</text></g>
     </g>
     <!-- lantern -->
-    <g class="lantern" transform="translate(248 112)">
+    <g class="lantern" transform="translate(248 ${ROOF_TOP[lk.building ?? 'workshop']})">
       <circle class="lantern-glow" r="80" fill="url(#glow)"/>
       <line x1="0" y1="34" x2="0" y2="-6" stroke="#6b2f22" stroke-width="4"/>
-      <path d="M-14 -6h28l-4 -30h-20z" class="lantern-body" fill="#5b5f6b" stroke="#2c2f37" stroke-width="3"/>
+      ${lk.icon !== '🏮' ? `<text class="roof-icon" y="-4" text-anchor="middle" font-size="44">${lk.icon}</text>` : ''}<path d="M-14 -6h28l-4 -30h-20z" class="lantern-body ${lk.icon !== '🏮' ? 'hide' : ''}" fill="#5b5f6b" stroke="#2c2f37" stroke-width="3"/>
       <rect x="-10" y="-42" width="20" height="6" rx="2" fill="#2c2f37"/>
       <g class="sparks"></g>
     </g>
@@ -117,9 +166,10 @@ export class Stage {
       <rect x="-52" y="400" width="104" height="${FLOOR - 400}" fill="#f7f1e3" stroke="#6b5a45" stroke-width="3"/>
       <path d="M-62 400 h124 l-10 -30 h-104z" fill="#4f93c9" stroke="#2c5f86" stroke-width="3"/>
       <path d="M-42 370v30M-18 370v30M6 370v30M30 370v30" stroke="#fff" stroke-width="7" opacity=".7"/>
-      <text x="0" y="436" text-anchor="middle" class="tag">PUBLIC INFO</text><circle cx="0" cy="458" r="10" fill="#ffd54a"/>
+      <text x="0" y="436" text-anchor="middle" class="tag">${lk.kiosk}</text><circle cx="0" cy="458" r="10" fill="#ffd54a"/>
     </g>
     <g class="strangers">${STRANGERS.map(([x, y], i) => `<g transform="translate(${x} ${y})"><g class="stranger" style="animation-delay:${i * 0.3}s"><rect x="-13" y="-30" width="26" height="30" rx="10" fill="#4a3f63"/><circle cx="-5" cy="-19" r="3" fill="#ff6b8a"/><circle cx="5" cy="-19" r="3" fill="#ff6b8a"/></g></g>`).join('')}<text x="912" y="364" text-anchor="middle" class="tag dim">OUTSIDERS</text></g>
+    <g class="props">${lk.props}</g>
     <g class="agents"></g>
     <g class="fx"></g>
     <rect class="flash" width="${W}" height="${H}" fill="#ff2d2d" opacity="0" pointer-events="none"/>`;
@@ -128,9 +178,12 @@ export class Stage {
     this.boardItems = this.svg.querySelector('.board-items') as SVGGElement;
   }
 
-  setup(members: Member[], board: boolean) {
+  setup(members: Member[], board: boolean, lk: Look = DEFAULT_LOOK) {
     this.board = board;
-    this.scene(board);
+    this.scene(board, lk);
+    this.svg.classList.toggle('day', lk.day);
+    this.svg.removeAttribute('style');
+    for (const [k, v] of Object.entries(lk.vars)) this.svg.style.setProperty(k, v);
     this.sprites.clear();
     let f = 0, g = 0;
     const homes: [number, number][] = [];

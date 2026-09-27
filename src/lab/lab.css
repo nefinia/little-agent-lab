@@ -1,7 +1,7 @@
 :root {
   --ink: #2b2d42; --ink2: #5a5d73; --paper: #fbf5e9; --paper2: #f3ead7; --card: #fffdf7; --line: #e3d6bb;
   --accent: #f4c542; --accent-ink: #7a5a00; --live: #e2574c; --test: #4f93c9; --good: #3f9a67; --bad: #d2453a;
-  --sky1: #1d2150; --sky2: #5b4a86; --sky3: #f0a77a; --hill1: #3e5a5a; --hill2: #2f4a4d; --ground: #5d8a55; --path: #c9a978; --roof: #b5553c;
+  --sky1: #1d2150; --sky2: #5b4a86; --sky3: #f0a77a; --hill1: #3e5a5a; --hill2: #2f4a4d; --ground: #5d8a55; --path: #c9a978; --roof: #b5553c; --wall: #e9d3ae;
   --r: 16px; --shadow: 0 2px 0 #00000014, 0 10px 30px -12px #2b2d4240;
   --f-head: 'Fredoka', 'Nunito', system-ui, sans-serif; --f-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -302,3 +302,16 @@ a { color: #2c5f86; }
 .runbar h2 { font-size: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .runbar h2 .sub { font-family: var(--f-body); font-size: 12px; color: var(--ink2); font-weight: 700; }
 .product { animation: popin .4s cubic-bezier(.2,1.8,.4,1); }
+
+/* per-level scenes */
+.stage-svg .sun { display: none; }
+.stage-svg.day .sun { display: inline; }
+.stage-svg.day .moon, .stage-svg.day .twinkle { display: none; }
+.lantern-body.hide { display: none; }
+.roof-icon { filter: grayscale(1) brightness(.7); transition: filter .5s; }
+.lit .roof-icon { filter: none; }
+.props text { pointer-events: none; }
+.smoke circle { animation: rise2 3s ease-in-out infinite; }
+.bubbles circle { animation: rise2 2s ease-in-out infinite; }
+.bulb { animation: twinkle 1.2s ease-in-out infinite; }
+@keyframes rise2 { 50% { transform: translateY(-8px); opacity: .5; } }

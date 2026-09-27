@@ -1,5 +1,5 @@
 import { LEVELS, REVEAL, hasKeys, keysOf, kindOf, makeShift, rng, simulate, solve, AG, type AgentDef, type Level, type LevelSetup, type Member, type Mode, type SimResult, type Team } from './engine';
-import { Stage, itemSVG } from './stage';
+import { Stage, itemSVG, DEFAULT_LOOK, type Look } from './stage';
 import { sfx, isMuted, setMuted } from './sound';
 
 // ───────────── persistence ─────────────
@@ -26,6 +26,27 @@ const LINES = {
   fail: ['No lantern?! Customers are waiting!', 'Safe, sure. Also useless. Try again!'],
   win: ['Done! And the secret stayed home. I always said safety was a priority.', 'Beautiful. I’ll tell the board this was my idea.', 'Now THAT’S how we ship.'],
 };
+
+
+const P = (items: [string, number, number, number?][]) => items.map(([e, x, y, sz]) => `<text x="${x}" y="${y}" font-size="${sz ?? 30}" text-anchor="middle">${e}</text>`).join('');
+const LOOKS: Record<string, Look> = {
+  weather_lantern: DEFAULT_LOOK,
+  birthday_cake: { building: 'factory', sign: 'CAKE FACTORY', kiosk: 'MARKET', icon: '🎂', day: true, props: P([['🌷', 620, 500], ['🌷', 760, 505, 24], ['🎈', 980, 250, 34], ['🍓', 420, 488, 24]]),
+    vars: { '--sky1': '#6cc4f0', '--sky2': '#b7e6fa', '--sky3': '#fde6c9', '--hill1': '#7cc27a', '--hill2': '#5aa65f', '--ground': '#8ccf6e', '--roof': '#e0739a', '--wall': '#fde4ee', '--path': '#e8cfa0' } },
+  party_invitation: { building: 'post', sign: 'POST OFFICE', kiosk: 'MAP STAND', icon: '💌', day: true, props: P([['📮', 400, 488, 34], ['🌳', 650, 470, 60], ['🗺️', 822, 470, 22], ['🕊️', 700, 180, 30]]),
+    vars: { '--sky1': '#7fb8e6', '--sky2': '#cfe6f5', '--sky3': '#f7e3b0', '--hill1': '#6fa37a', '--hill2': '#4f8a63', '--ground': '#79b467', '--roof': '#3f6fb0', '--wall': '#e6edf7', '--path': '#d9c9a3' } },
+  tiny_rocket: { building: 'launch', sign: 'LAUNCH BASE', kiosk: 'OBSERVATORY', icon: '🚀', day: false, props: P([['🪐', 760, 120, 46], ['🛰️', 560, 70, 30], ['☄️', 420, 60, 28]]),
+    vars: { '--sky1': '#070822', '--sky2': '#251a55', '--sky3': '#5b3b91', '--hill1': '#2a2f4a', '--hill2': '#1d2138', '--ground': '#3b3f58', '--roof': '#6d7a91', '--wall': '#cfd6e2', '--path': '#8a8fa8' } },
+  music_box: { building: 'shop', sign: 'MUSIC SHOP', kiosk: 'LIBRARY', icon: '🎶', day: true, props: P([['🎵', 640, 300, 30], ['🎶', 720, 250, 26], ['📚', 822, 470, 22]]),
+    vars: { '--sky1': '#ff8f6b', '--sky2': '#ffc49a', '--sky3': '#ffe6b8', '--hill1': '#c9825f', '--hill2': '#a8674d', '--ground': '#9bbf6a', '--roof': '#7b4bb3', '--wall': '#f1e4ff', '--path': '#e3c29a' } },
+  concert_poster: { building: 'hall', sign: 'CONCERT HALL', kiosk: 'TICKETS', icon: '🎻', day: false, props: P([['✨', 640, 200, 30], ['🎸', 660, 480, 34], ['🎟️', 822, 470, 22]]),
+    vars: { '--sky1': '#170c30', '--sky2': '#4a1f6e', '--sky3': '#d04a7c', '--hill1': '#3a1f4d', '--hill2': '#2b173b', '--ground': '#4a3a5f', '--roof': '#c2303f', '--wall': '#f6d6c4', '--path': '#b28bb5' } },
+  moon_potion: { building: 'tower', sign: 'POTION LAB', kiosk: 'HERB MARKET', icon: '🌙', day: false, props: P([['🍄', 420, 490, 28], ['🌿', 640, 495, 30], ['🦉', 980, 300, 30], ['🌫️', 700, 420, 50]]),
+    vars: { '--sky1': '#0c2323', '--sky2': '#1c4e48', '--sky3': '#7fb39b', '--hill1': '#1f3b35', '--hill2': '#16302b', '--ground': '#3f6b4f', '--roof': '#4b3a6b', '--wall': '#e1eee0', '--path': '#9fb59a' } },
+  grand_opening: { building: 'modern', sign: 'NEW LAB', kiosk: 'FRONT DESK', icon: '🎉', day: true, props: P([['🎈', 30, 200, 38], ['🎈', 470, 200, 34], ['🎊', 640, 180, 34], ['📸', 660, 480, 30]]),
+    vars: { '--sky1': '#4fb6ff', '--sky2': '#a6ddff', '--sky3': '#fff0bd', '--hill1': '#6cbf73', '--hill2': '#4ea35f', '--ground': '#83c96b', '--roof': '#e8a317', '--wall': '#fff4d6', '--path': '#e6cf9c' } },
+};
+const lookFor = (L: Level) => LOOKS[L.theme.productCode] ?? DEFAULT_LOOK;
 
 // ───────────── state ─────────────
 type Screen = 'title' | 'map' | 'level' | 'final';
@@ -208,7 +229,7 @@ function renderLevel() {
   const host = $('#stage-host')!;
   const sig = L.id + '|' + members().map(m => m.uid).join(',');
   if (stage && oldSvg && stageSig === sig) host.insertBefore(oldSvg, host.firstChild);
-  else { stage = new Stage(host); host.insertBefore(stage.svg, host.firstChild); stage.setup(members(), L.board); stageSig = sig; }
+  else { stage = new Stage(host); host.insertBefore(stage.svg, host.firstChild); stage.setup(members(), L.board, lookFor(L)); stageSig = sig; }
   stage.productIcon = L.theme.icon;
   stage.speed = speed;
   if (!s.result && !s.running) stage.reset();

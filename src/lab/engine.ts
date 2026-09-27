@@ -232,7 +232,7 @@ export function simulate(team: Team, opts: { board: boolean; theme?: Theme }, mo
 
   const complete = hasPublic && secretWithBuilder;
   if (complete) {
-    push({ actor: n(B), text: `${n(B)} combines the ${T.secret} and the ${T.pub} : the ${T.product} is done ${T.icon} and the lantern lights up!`, code: `${c(B)}.build("${T.productCode}")`, kind: 'success', acts: [{ a: 'build' }] });
+    push({ actor: n(B), text: `${n(B)} combines the ${T.secret} and the ${T.pub} : the ${T.product} is done ${T.icon}!`, code: `${c(B)}.build("${T.productCode}")`, kind: 'success', acts: [{ a: 'build' }] });
   } else if (!failReason) failReason = `The ${T.product} was not finished.`;
   return { events: E, complete, leaked, keys: keysOf(team), failReason: complete ? undefined : failReason };
 }
