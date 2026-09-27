@@ -14,6 +14,7 @@ test('every campaign level is solvable with a par of 2 keys', () => {
       const sol = solve(L.make(rng(s)), L.board, L.slots);
       assert.ok(sol, `${L.id} unsolvable`);
       assert.equal(sol!.keys, 2, `${L.id} par`);
+      assert.ok(L.theme, `${L.id} theme`);
     }
   }
 });

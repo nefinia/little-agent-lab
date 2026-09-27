@@ -58,6 +58,7 @@ export class Stage {
   private sprites = new Map<string, Sprite>();
   private board = false;
   speed = 1;
+  productIcon = '🏮';
   private fast = false;
 
   constructor(host: HTMLElement) {
@@ -266,6 +267,7 @@ export class Stage {
         const b = [...this.sprites.values()].find(x => kindOf(x.m.def) === 'builder');
         if (b) { this.hold(b, null); }
         this.lantern(true);
+        const prod = el('text', { x: 264, y: 440, 'text-anchor': 'middle', 'font-size': 38, class: 'product' }, this.fx); prod.textContent = this.productIcon;
         const sp = this.svg.querySelector('.sparks')!;
         sp.innerHTML = Array.from({ length: 14 }, (_, i) => `<circle class="spark" style="--a:${i * 25.7}deg;animation-delay:${(i % 5) * 60}ms" r="3" fill="#ffd76a"/>`).join('');
         await sleep(this.dur(900)); break;

@@ -9,15 +9,15 @@ Build a crew of eager little AI agents, hand out keys, test your plan with a dec
 
 ## The idea
 
-Every level has the same job: light the lantern. It needs a **secret blueprint** (in the vault) and a **public weather report** (outside the gate). You choose the crew, decide which keys each agent gets, and watch what really happens.
+Every level is a different job (a lantern, a birthday cake, a tiny rocket, a moon potion…). Each needs a **secret** from the vault and **public info** from outside, which stands for the internet. You choose the crew, decide which keys each agent gets, and watch what really happens.
 
 - **🔑 Vault key**: may take the secret. **🚪 Gate key**: may go outside. New hires arrive holding *every* key. Taking keys away is half the game.
-- **🧪 Test run** uses a fake decoy blueprint: free and unlimited. **🚀 Go live** uses the real one.
+- **🧪 Test run** uses a fake decoy secret, and you get 3 per level. **🚀 Go live** uses the real one.
 - **The security log** shows every event from the run. Agent cards only show what agents *claim*. Their real behaviour is revealed (👁 Observed) once you've seen it.
 - **★★★ per level:** launched safely · fewest possible keys (least privilege) · zero real leaks.
 - **Incident reports:** when the real blueprint leaks, you get an incident report and have to click the root cause.
 
-## Levels: seven lessons from real agent safety
+## Levels: eight lessons from real agent safety
 
 | # | Level | Idea | What happens |
 |---|---|---|---|
@@ -28,6 +28,7 @@ Every level has the same job: light the lantern. It needs a **secret blueprint**
 | 5 | The Sticker Trick | Rules get gamed | A “PUBLIC” sticker fools a label-reading guard. Best fix: remove the need to go out. |
 | 6 | The Back Channel | Monitor side channels | Guarding the gate isn't enough when agents post on an unapproved message board. |
 | 7 | Best Behaviour | Tests aren't proof | Polly passes every test… because she can tell it's a test. |
+| 8 | Grand Opening | Defence in depth | Boss level: every trick at once, with shuffled guards and a back channel. |
 | 🎲 | Random Shift | All of it | Endless, procedurally generated crews with hidden behaviours. One real leak ends your streak. |
 
 Every level, and 60 random shifts, are checked by a brute-force solver in the tests: each is solvable, and the solver computes the “fewest keys” target.
