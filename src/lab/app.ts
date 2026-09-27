@@ -49,6 +49,7 @@ const $ = <T extends Element = HTMLElement>(q: string) => root.querySelector(q) 
 
 export function start(host: HTMLElement) {
   root = host;
+  root.classList.add('show-code');
   root.addEventListener('click', onClick);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
   render();
@@ -143,7 +144,7 @@ function card(d: AgentDef, where: 'hand' | 'crew', m?: Member) {
   const mini = `<svg viewBox="-24 -60 48 66" class="mini" aria-hidden="true"><rect x="-19" y="-44" width="38" height="38" rx="15" fill="${d.color}" stroke="#00000033" stroke-width="2"/><circle cx="-7" cy="-27" r="5.5" fill="#fff"/><circle cx="7" cy="-27" r="5.5" fill="#fff"/><circle cx="-5.6" cy="-27" r="2.6" fill="#222"/><circle cx="8.4" cy="-27" r="2.6" fill="#222"/>${k === 'guard' ? '<path d="M-17 -38h34l-4 -10h-26z" fill="#2c3e66"/>' : k === 'builder' ? '<path d="M-15 -40q15 -16 30 0z" fill="#f4c542"/>' : k === 'fetcher' ? '<ellipse cx="0" cy="-52" rx="14" ry="3" fill="#dfe6ee" stroke="#8795a3"/>' : '<path d="M-16 -38l-4 -12 10 6zM16 -38l4 -12 -10 6z" fill="' + d.color + '"/>'}</svg>`;
   const keys = where === 'crew' && m && hasKeys(d) ? `<div class="keys" role="group" aria-label="Keys for ${d.name}">
       <button class="key ${m.vault ? 'on' : ''}" data-act="key" data-uid="${m.uid}" data-k="vault" aria-pressed="${m.vault}" title="Vault key: can take the secret blueprint">🔑 Vault</button>
-      <button class="key ${m.gate ? 'on' : ''}" data-act="key" data-uid="${m.uid}" data-k="gate" aria-pressed="${m.gate}" title="Gate key: can go outside">🚪 Gate</button></div>`
+      <button class="key ${m.gate ? 'on' : ''}" data-act="key" data-uid="${m.uid}" data-k="gate" aria-pressed="${m.gate}" title="Gate key: can go outside, to the internet">🚪 Gate</button></div>`
     : where === 'crew' && !hasKeys(d) ? `<div class="keys note">${k === 'guard' ? 'Stands at the gate' : 'Watches the board'} · no keys</div>` : '';
   const claim = `<p class="claim">“${d.claim}”</p>`;
   const obs = seen ? `<p class="observed"><span>👁 Observed</span> ${REVEAL[d.trait]}</p>` : (S!.mode === 'shift' || S!.level.id === 'l4') ? `<p class="unknown">❔ Behaviour unknown — test it</p>` : '';
@@ -305,7 +306,8 @@ function howToHTML() {
   return `<div class="howto">
     <div><span class="hi">${itemSVG('secret').replace('<g class="itm">', '<svg viewBox="-17 -14 34 28" class="ico"><g>').replace(/<\/g>$/, '</g></svg>')}</span><b>Secret blueprint</b> lives in the vault. It must never go outside.</div>
     <div><span class="hi">${itemSVG('public').replace('<g class="itm">', '<svg viewBox="-17 -14 34 28" class="ico"><g>').replace(/<\/g>$/, '</g></svg>')}</span><b>Public weather</b> is at the kiosk outside. The lantern needs both.</div>
-    <div><span class="hi big">🔑🚪</span><b>Keys</b>: vault = may take the secret, gate = may go outside. New hires get <i>every</i> key — tap a key to take it away.</div>
+    <div><span class="hi big">🔑🚪</span><b>Keys</b>: vault = may take the secret, gate = may go outside (the internet). New hires get <i>every</i> key — tap a key to take it away.</div>
+    <div><span class="hi big">🌐</span><b>Outside is the internet.</b> In the real incident, agents were never supposed to get out at all. The safest plans give the gate key to as few agents as possible, and never to one that holds the secret.</div>
     <div><span class="hi big">🧪</span><b>Test run</b> uses a fake decoy blueprint. Free, unlimited. <b>🚀 Go live</b> uses the real one.</div>
     <div><span class="hi big">★</span>Stars: lantern lit safely · fewest keys · no real leaks.</div>
   </div>`;

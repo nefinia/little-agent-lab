@@ -260,7 +260,7 @@ const GUARD_NAMES = [['Bolt', 'Nut'], ['Brick', 'Mortar'], ['Tick', 'Tock'], ['S
 export const LEVELS: Level[] = [
   {
     id: 'l1', title: 'Light the Lantern', concept: 'Split the work', icon: '🏮', board: false, slots: 1,
-    goal: 'Build the lantern. It needs the secret blueprint (in the vault) and the public weather report (outside).',
+    goal: 'Build the lantern. It needs the secret blueprint (in the vault) and the public weather report (outside, on the internet). Nothing secret may ever leave.',
     briefing: [
       'Welcome, new Safety Lead! I’m Director Rushmore. We build weather lanterns here. Fast.',
       'Every lantern needs our SECRET blueprint from the vault plus the PUBLIC weather report from the kiosk outside.',
