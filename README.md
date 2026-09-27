@@ -9,7 +9,7 @@ Build a crew of eager little AI agents, hand out keys, test your plan with a dec
 
 ## The idea
 
-Every level is a different job (a lantern, a birthday cake, a tiny rocket, a moon potion…). Each needs a **secret** from the vault and **public info** from outside, which stands for the internet. You choose the crew, decide which keys each agent gets, and watch what really happens.
+Every level is a different job (a lantern, a birthday cake, a tiny rocket, a moon potion…). Each needs a **secret** from the vault and **public info** from outside, which stands for the internet. Every level has its own place to match: a workshop, a cake factory, a post office, a rocket launch base, a music shop, a concert hall, a potion lab and a brand-new lab. You choose the crew, decide which keys each agent gets, and watch what really happens.
 
 - **🔑 Vault key**: may take the secret. **🚪 Gate key**: may go outside. New hires arrive holding *every* key. Taking keys away is half the game.
 - **🧪 Test run** uses a fake decoy secret, and you get 3 per level. **🚀 Go live** uses the real one.
