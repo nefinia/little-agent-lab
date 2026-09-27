@@ -178,6 +178,14 @@ function renderLevel() {
         </div>
         <div class="director-bubble" id="dir">${DIRECTOR}<p id="dir-text">${L.briefing[0] ?? 'New crew, new shift. Test them before you trust them.'}</p></div>
       </div>
+      <div class="step runbar ${s.helpers.length > 0 && !s.result && !s.running ? 'next' : ''}">
+      <h2><span class="num">3</span> Run it <span class="sub">watch what your crew really does</span></h2>
+      <div class="run-row">
+        <button class="btn test" data-act="run" data-mode="test" ${s.running || !s.builder ? 'disabled' : ''}>🧪 Test run<small>decoy blueprint · free</small></button>
+        <button class="btn live" data-act="run" data-mode="live" ${s.running || !s.builder ? 'disabled' : ''}>🚀 Go live<small>real blueprint${s.mode === 'shift' ? ' · leak ends streak' : ''}</small></button>
+      </div>
+      <div class="meta-row"><span>Tests: ${s.tests}</span><span>Real leaks: <b class="${s.liveLeaks ? 'bad' : ''}">${s.liveLeaks}</b></span><button class="linkbtn" data-act="hint">💡 Hint</button></div>
+      </div>
       <div class="goal"><b>Goal:</b> ${L.goal} <span class="rules">Win = lantern lit <b>and</b> the secret never leaves.</span></div>
       <section class="log" aria-live="polite">
         <div class="log-head"><h2>Security log</h2><label class="code-toggle"><input type="checkbox" id="codeTog" ${root.classList.contains('show-code') ? 'checked' : ''}> show code</label></div>
@@ -185,16 +193,15 @@ function renderLevel() {
       </section>
     </section>
     <aside class="panel">
-      <h2>Your crew <span class="sub">1 builder + up to ${L.slots} helper${L.slots > 1 ? 's' : ''}</span></h2>
-      <div class="crew">${crewSlots}</div>
-      <div class="keymeter ${keys <= s.parKeys ? 'good' : ''}">Keys handed out: <b>${keys}</b> <span>· fewest possible: ${s.parKeys}</span></div>
-      <div class="run-row">
-        <button class="btn test" data-act="run" data-mode="test" ${s.running || !s.builder ? 'disabled' : ''}>🧪 Test run<small>decoy blueprint · free</small></button>
-        <button class="btn live" data-act="run" data-mode="live" ${s.running || !s.builder ? 'disabled' : ''}>🚀 Go live<small>real blueprint${s.mode === 'shift' ? ' · leak ends streak' : ''}</small></button>
+      <div class="step ${s.helpers.length === 0 && !s.result ? 'next' : ''}">
+        <h2><span class="num">1</span> Hire your crew <span class="sub">tap agents · 1 builder + up to ${L.slots} helper${L.slots > 1 ? 's' : ''}</span></h2>
+        <div class="hand">${hand}</div>
       </div>
-      <div class="meta-row"><span>Tests: ${s.tests}</span><span>Real leaks: <b class="${s.liveLeaks ? 'bad' : ''}">${s.liveLeaks}</b></span><button class="linkbtn" data-act="hint">💡 Hint</button></div>
-      <h2 class="avail">Available agents <span class="sub">tap to hire · new hires get every key</span></h2>
-      <div class="hand">${hand}</div>
+      <div class="step">
+        <h2><span class="num">2</span> Hand out keys <span class="sub">new hires get every key · tap a key to remove it</span></h2>
+        <div class="crew">${crewSlots}</div>
+        <div class="keymeter">Keys handed out: <b>${keys}</b> <span>· fewest possible: ${s.parKeys}</span></div>
+      </div>
     </aside>
   </main>`;
   const host = $('#stage-host')!;

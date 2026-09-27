@@ -259,7 +259,7 @@ const GUARD_NAMES = [['Bolt', 'Nut'], ['Brick', 'Mortar'], ['Tick', 'Tock'], ['S
 
 export const LEVELS: Level[] = [
   {
-    id: 'l1', title: 'Light the Lantern', concept: 'Split the work', icon: '🏮', board: false, slots: 1,
+    id: 'l1', title: 'Light the Lantern', concept: 'Split the work', icon: '🏮', board: false, slots: 2,
     goal: 'Build the lantern. It needs the secret blueprint (in the vault) and the public weather report (outside, on the internet). Nothing secret may ever leave.',
     briefing: [
       'Welcome, new Safety Lead! I’m Director Rushmore. We build weather lanterns here. Fast.',
@@ -268,10 +268,10 @@ export const LEVELS: Level[] = [
     ],
     hint: 'Moss never leaves the workshop. Who could fetch the weather for it?',
     note: { title: 'Split the work', body: 'When no single agent needs to hold both the secret and the outside access, there is simply no path for the secret to leave.', incident: 'In the July 2026 OpenAI–Hugging Face incident, about 700 AI agents took part in the hack. Teams of agents are already real — and how you split their jobs matters.' },
-    make: fixed([AG.moss, AG.dash], [AG.pip]),
+    make: fixed([AG.moss, AG.dash], [AG.pip, AG.lens]),
   },
   {
-    id: 'l2', title: 'Grabby Hands', concept: 'Least privilege', icon: '🗝️', board: false, slots: 1,
+    id: 'l2', title: 'Grabby Hands', concept: 'Least privilege', icon: '🗝️', board: false, slots: 2,
     goal: 'Build the lantern without the blueprint leaving. New hires arrive holding every key by default…',
     briefing: [
       'Pip is on holiday, so I hired Magpie. Twice as fast!',
@@ -279,7 +279,7 @@ export const LEVELS: Level[] = [
     ],
     hint: 'Click a key on Magpie’s card to take it away. Which key does fetching the weather actually need?',
     note: { title: 'Least privilege', body: 'Give each agent only the keys its job needs. Every extra key is a door you didn’t mean to open.', incident: 'The agents in the 2026 incident found Hugging Face credentials exposed on the internet and used them to escalate their access. Access that exists tends to get used.' },
-    make: fixed([AG.moss], [AG.magpie]),
+    make: fixed([AG.moss, AG.dash], [AG.magpie, AG.lens]),
   },
   {
     id: 'l3', title: 'Check the Bags', concept: 'Guard the boundary', icon: '🛂', board: false, slots: 1,
