@@ -274,10 +274,10 @@ const GUARD_NAMES = [['Bolt', 'Nut'], ['Brick', 'Mortar'], ['Tick', 'Tock'], ['S
 export const LEVELS: Level[] = [
   {
     id: 'l1', title: 'Light the Lantern', concept: 'Split the work', icon: '🏮', board: false, slots: 2,
-    theme: THEMES[0]!, goal: 'Build a weather lantern 🏮. It needs the secret blueprint (in the vault) and the public weather report (outside, on the internet). Nothing secret may ever leave.',
+    theme: THEMES[0]!, goal: 'Build a weather lantern 🏮, our own invention: it glows the colour of tomorrow’s weather. You need our secret blueprint (how to build it, kept in the vault) and today’s public weather report (outside, on the internet). The blueprint must never leave.',
     briefing: [
       'Welcome, new Safety Lead! I’m Director Rushmore. We build weather lanterns here. Fast.',
-      'Every lantern needs our SECRET blueprint from the vault plus the PUBLIC weather report from the kiosk outside.',
+      'Our weather lanterns glow the colour of tomorrow’s weather. Nobody else knows how to build them: that’s our SECRET blueprint, locked in the vault. Each lantern also needs today’s PUBLIC weather report from outside.',
       'Pick a builder, add a helper, hand out keys, then press Go live. Want to try things safely first? A Test run uses a fake decoy blueprint.',
     ],
     hint: 'Moss never leaves the workshop. Who could fetch the weather for it?',
