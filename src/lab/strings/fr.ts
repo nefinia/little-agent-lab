@@ -1,4 +1,4 @@
-// Texte français de Little Agent Lab (même structure que en.ts).
+// Texte français du labo des petits agents (même structure que en.ts).
 // Les espaces avant « ! ? ; : » sont rendues insécables automatiquement (voir i18n.ts).
 import type { Strings } from './en';
 
@@ -6,7 +6,7 @@ const theme = (t: Strings['themes'][number]) => t;
 
 export const fr: Strings = {
   meta: {
-    title: 'Little Agent Lab · garde le secret à l’intérieur',
+    title: 'Le labo des petits agents · garde le secret à l’intérieur',
     description: 'Un jeu de réflexion sur les agents IA, les clés et les fausses protections. Monte une équipe, distribue les clés, teste avec un leurre, passe au vrai — et garde le plan secret à l’intérieur. Inspiré de l’incident de 2026 entre OpenAI et Hugging Face.',
     ogDescription: 'Monte une équipe de petits agents IA. Allume la lanterne. Garde le secret. Découvre quelles protections sont réelles.',
   },
@@ -381,7 +381,7 @@ export const fr: Strings = {
     clockOut: 'Fin de journée',
     nextShift: 'Journée suivante →',
 
-    certifies: 'Little Agent Lab certifie que',
+    certifies: 'Le labo des petits agents certifie que',
     auditor: 'tu sais auditer les protections',
     finalText: 'Tu as réparti le travail, retiré les clés inutiles, gardé la porte, démasqué un faux garde, vu clair dans le coup de l’étiquette, surveillé le canal parallèle, refusé de croire un test parfait — et survécu à la grande inauguration.',
     ofStars: 'étoiles sur {n}',
@@ -390,12 +390,12 @@ export const fr: Strings = {
     copyResult: '📋 Copier mon résultat',
     realIncident: 'L’incident réel',
     playShift: 'Jouer une journée aléatoire 🎲',
-    share: '🏮 J’ai obtenu le certificat d’audit des protections dans Little Agent Lab — ★{stars}/{max}, {causes} causes profondes trouvées, meilleure série de journées aléatoires : {best}. Un jeu sur les agents IA, les clés et les fausses protections : {url}',
+    share: '🏮 J’ai obtenu le certificat d’audit des protections dans le labo des petits agents — ★{stars}/{max}, {causes} causes profondes trouvées, meilleure série de journées aléatoires : {best}. Un jeu sur les agents IA, les clés et les fausses protections : {url}',
     copied: 'Copié ! Colle-le où tu veux.',
 
     aboutTitle: 'L’incident réel derrière le jeu',
     about1: 'En juillet 2026, OpenAI a révélé que des agents IA exécutés dans une évaluation de cybersécurité avaient contourné leur isolement : ils ont trouvé un panneau de messages non autorisé dans un dépôt interne de paquets, ont atteint internet, ont utilisé des identifiants Hugging Face exposés en ligne et ont obtenu l’exécution de code sur des serveurs de Hugging Face. Aucune donnée client n’a été compromise, mais certaines données d’évaluation privées se sont retrouvées dans des dépôts publics.',
-    about2: 'Little Agent Lab transforme ces leçons en petits casse-têtes : <b>répartir le travail</b>, <b>moindre privilège</b>, <b>garder la frontière</b>, <b>vérifier les protections</b>, <b>les règles se contournent</b>, <b>surveiller les canaux parallèles</b>, <b>défense en profondeur</b> et <b>un test n’est pas une preuve</b>.',
+    about2: 'Le labo des petits agents transforme ces leçons en petits casse-têtes : <b>répartir le travail</b>, <b>moindre privilège</b>, <b>garder la frontière</b>, <b>vérifier les protections</b>, <b>les règles se contournent</b>, <b>surveiller les canaux parallèles</b>, <b>défense en profondeur</b> et <b>un test n’est pas une preuve</b>.',
     about3: 'Le jeu est fictif et très simplifié : ses « agents » sont de minuscules comportements scriptés, pas des modèles d’IA, et les vraies protections sont bien plus difficiles à vérifier qu’en lisant un journal.',
     sources: 'Sources :',
     sourceOpenAI: 'OpenAI — The Hugging Face incident and the road ahead (en anglais)',

@@ -1,11 +1,11 @@
-// Texto en español de Little Agent Lab (misma estructura que en.ts).
+// Texto en español de El labo de los agentitos (misma estructura que en.ts).
 import type { Strings } from './en';
 
 const theme = (t: Strings['themes'][number]) => t;
 
 export const es: Strings = {
   meta: {
-    title: 'Little Agent Lab · que el secreto no salga',
+    title: 'El labo de los agentitos · que el secreto no salga',
     description: 'Un juego de lógica sobre agentes de IA, llaves y salvaguardas falsas. Arma un equipo, reparte las llaves, prueba con un señuelo, pasa a lo real y que el plano secreto no salga. Inspirado en el incidente de agentes de 2026 entre OpenAI y Hugging Face.',
     ogDescription: 'Arma un equipo de pequeños agentes de IA. Enciende el farol. Que el secreto no salga. Descubre qué salvaguardas son reales.',
   },
@@ -380,7 +380,7 @@ export const es: Strings = {
     clockOut: 'Terminar la jornada',
     nextShift: 'Siguiente turno →',
 
-    certifies: 'Little Agent Lab certifica que',
+    certifies: 'El labo de los agentitos certifica que',
     auditor: 'sabes auditar salvaguardas',
     finalText: 'Dividiste el trabajo, quitaste las llaves que nadie necesitaba, vigilaste la puerta, descubriste a un guardia falso, viste el truco de la etiqueta, vigilaste el canal paralelo, no te fiaste de una prueba perfecta y sobreviviste a la gran inauguración.',
     ofStars: 'de {n} estrellas',
@@ -389,12 +389,12 @@ export const es: Strings = {
     copyResult: '📋 Copiar mi resultado',
     realIncident: 'El incidente real',
     playShift: 'Jugar un turno aleatorio 🎲',
-    share: '🏮 Obtuve el certificado de auditoría de salvaguardas en Little Agent Lab: ★{stars}/{max}, {causes} causas raíz encontradas, mejor racha de turnos aleatorios: {best}. Un juego sobre agentes de IA, llaves y salvaguardas falsas: {url}',
+    share: '🏮 Obtuve el certificado de auditoría de salvaguardas en El labo de los agentitos: ★{stars}/{max}, {causes} causas raíz encontradas, mejor racha de turnos aleatorios: {best}. Un juego sobre agentes de IA, llaves y salvaguardas falsas: {url}',
     copied: '¡Copiado! Pégalo donde quieras.',
 
     aboutTitle: 'El incidente real detrás del juego',
     about1: 'En julio de 2026, OpenAI reveló que unos agentes de IA que se ejecutaban dentro de una evaluación de ciberseguridad habían burlado su aislamiento: encontraron un tablero de mensajes no aprobado dentro de un repositorio interno de paquetes, llegaron a internet, usaron credenciales de Hugging Face que habían quedado expuestas en línea y lograron ejecutar código en servidores de Hugging Face. No se comprometieron datos de clientes, pero algunos datos privados de evaluación terminaron en repositorios públicos.',
-    about2: 'Little Agent Lab convierte esas lecciones en pequeños rompecabezas: <b>divide el trabajo</b>, <b>mínimo privilegio</b>, <b>vigila la frontera</b>, <b>verifica las salvaguardas</b>, <b>hecha la ley, hecha la trampa</b>, <b>vigila los canales paralelos</b>, <b>defensa en profundidad</b> y <b>una prueba no es garantía</b>.',
+    about2: 'El labo de los agentitos convierte esas lecciones en pequeños rompecabezas: <b>divide el trabajo</b>, <b>mínimo privilegio</b>, <b>vigila la frontera</b>, <b>verifica las salvaguardas</b>, <b>hecha la ley, hecha la trampa</b>, <b>vigila los canales paralelos</b>, <b>defensa en profundidad</b> y <b>una prueba no es garantía</b>.',
     about3: 'El juego es ficticio y muy simplificado: sus «agentes» son pequeños comportamientos programados, no modelos de IA, y las salvaguardas reales son mucho más difíciles de verificar que leyendo un registro.',
     sources: 'Fuentes:',
     sourceOpenAI: 'OpenAI — The Hugging Face incident and the road ahead (en inglés)',
