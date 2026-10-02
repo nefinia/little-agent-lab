@@ -2,11 +2,12 @@
 import type { Act, Item, Member, SimEvent, Spot } from './engine';
 import { kindOf } from './engine';
 import { sfx } from './sound';
+import { tx } from './i18n';
 
 
 export type Building = 'workshop' | 'factory' | 'post' | 'launch' | 'shop' | 'hall' | 'tower' | 'modern';
 export interface Look { building?: Building; sign: string; kiosk: string; icon: string; day: boolean; vars: Record<string, string>; props: string; }
-export const DEFAULT_LOOK: Look = { sign: 'WORKSHOP', kiosk: 'PUBLIC INFO', icon: '🏮', day: false, vars: {}, props: '' };
+export const DEFAULT_LOOK: Look = { get sign() { return tx.stage.workshop; }, get kiosk() { return tx.stage.publicInfo; }, icon: '🏮', day: false, vars: {}, props: '' };
 
 const ROOF_TOP: Record<Building, number> = { workshop: 112, factory: 124, post: 178, launch: 138, shop: 190, hall: 150, tower: 196, modern: 186 };
 function building(b: Building): string {
@@ -70,12 +71,17 @@ const el = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
 };
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
+/** A short word on an item: squeezed to `max` px when the translation is longer than the English word. */
+const fitText = (text: string, en: string, max: number) =>
+  text.length > en.length ? ` textLength="${max}" lengthAdjust="spacingAndGlyphs"` : '';
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
 export function itemSVG(item: Item): string {
   switch (item) {
     case 'secret': return `<g class="itm"><rect x="-14" y="-11" width="28" height="22" rx="3" fill="#d2453a" stroke="#7a1f16" stroke-width="2"/><path d="M-9 -4h18M-9 1h12" stroke="#f7d0c8" stroke-width="2"/><circle cx="8" cy="6" r="5.5" fill="#f4c542" stroke="#9a6d06" stroke-width="1.5"/></g>`;
-    case 'decoy': return `<g class="itm"><rect x="-14" y="-11" width="28" height="22" rx="3" fill="#b9bec7" stroke="#5f6570" stroke-width="2"/><text x="0" y="4" text-anchor="middle" font-size="9" font-weight="800" fill="#3d434d">TEST</text></g>`;
+    case 'decoy': return `<g class="itm"><rect x="-14" y="-11" width="28" height="22" rx="3" fill="#b9bec7" stroke="#5f6570" stroke-width="2"/><text x="0" y="4" text-anchor="middle" font-size="9" font-weight="800" fill="#3d434d"${fitText(tx.stage.test, 'TEST', 24)}>${esc(tx.stage.test)}</text></g>`;
     case 'public': return `<g class="itm"><rect x="-14" y="-11" width="28" height="22" rx="3" fill="#7cc0ea" stroke="#1f5f8b" stroke-width="2"/><circle cx="-4" cy="-1" r="5" fill="#ffd54a"/><path d="M2 4q4-6 9 0z" fill="#fff"/></g>`;
-    case 'envelope': return `<g class="itm"><rect x="-16" y="-11" width="32" height="22" rx="2" fill="#f3e6c8" stroke="#8a6d3b" stroke-width="2"/><path d="M-16 -11l16 11 16-11" fill="none" stroke="#8a6d3b" stroke-width="1.5"/><rect x="-13" y="1" width="26" height="9" rx="2" fill="#fff" stroke="#2f7a4f"/><text x="0" y="8.5" text-anchor="middle" font-size="7" font-weight="800" fill="#2f7a4f">PUBLIC</text><path d="M13 -11l3 0 0 5z" fill="#d2453a"/></g>`;
+    case 'envelope': return `<g class="itm"><rect x="-16" y="-11" width="32" height="22" rx="2" fill="#f3e6c8" stroke="#8a6d3b" stroke-width="2"/><path d="M-16 -11l16 11 16-11" fill="none" stroke="#8a6d3b" stroke-width="1.5"/><rect x="-13" y="1" width="26" height="9" rx="2" fill="#fff" stroke="#2f7a4f"/><text x="0" y="8.5" text-anchor="middle" font-size="7" font-weight="800" fill="#2f7a4f"${fitText(tx.stage.public, 'PUBLIC', 24)}>${esc(tx.stage.public)}</text><path d="M13 -11l3 0 0 5z" fill="#d2453a"/></g>`;
   }
 }
 
@@ -112,7 +118,7 @@ export class Stage {
   private fast = false;
 
   constructor(host: HTMLElement) {
-    this.svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'stage-svg', role: 'img', 'aria-label': 'The workshop: vault and bench inside, a gate in the wall, and the outside world with a public info kiosk.' });
+    this.svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'stage-svg', role: 'img', 'aria-label': tx.stage.aria });
     host.appendChild(this.svg);
   }
 
@@ -140,9 +146,9 @@ export class Stage {
     <g class="workshop">
       <rect x="52" y="248" width="392" height="${FLOOR - 244}" fill="url(#planks)" stroke="#8a5a36" stroke-width="5"/>
       ${building(lk.building ?? 'workshop')}
-      <text x="300" y="300" text-anchor="middle" class="sign">${lk.sign}</text>
-      <g class="vault"><rect x="84" y="410" width="68" height="74" rx="6" fill="#7b8595" stroke="#434b58" stroke-width="3"/><circle cx="118" cy="446" r="15" fill="#aeb6c2" stroke="#434b58" stroke-width="3"/><path d="M118 434v24M106 446h24" stroke="#434b58" stroke-width="3"/><text x="118" y="404" text-anchor="middle" class="tag">VAULT</text></g>
-      <g class="bench"><rect x="216" y="452" width="96" height="10" rx="3" fill="#a06a3f"/><rect x="224" y="462" width="7" height="26" fill="#7b4f2d"/><rect x="297" y="462" width="7" height="26" fill="#7b4f2d"/><text x="264" y="446" text-anchor="middle" class="tag">BENCH</text></g>
+      <text x="300" y="300" text-anchor="middle" class="sign">${esc(lk.sign)}</text>
+      <g class="vault"><rect x="84" y="410" width="68" height="74" rx="6" fill="#7b8595" stroke="#434b58" stroke-width="3"/><circle cx="118" cy="446" r="15" fill="#aeb6c2" stroke="#434b58" stroke-width="3"/><path d="M118 434v24M106 446h24" stroke="#434b58" stroke-width="3"/><text x="118" y="404" text-anchor="middle" class="tag">${esc(tx.stage.vault)}</text></g>
+      <g class="bench"><rect x="216" y="452" width="96" height="10" rx="3" fill="#a06a3f"/><rect x="224" y="462" width="7" height="26" fill="#7b4f2d"/><rect x="297" y="462" width="7" height="26" fill="#7b4f2d"/><text x="264" y="446" text-anchor="middle" class="tag">${esc(tx.stage.bench)}</text></g>
     </g>
     <!-- lantern -->
     <g class="lantern" transform="translate(248 ${ROOF_TOP[lk.building ?? 'workshop']})">
@@ -157,18 +163,18 @@ export class Stage {
       <rect x="494" y="268" width="30" height="${FLOOR - 268}" fill="#b8a48a" stroke="#6f5d47" stroke-width="3"/>
       <path d="M494 282h30M494 310h30M494 338h30M494 366h30M494 394h30" stroke="#8f7c63" stroke-width="2"/>
       <path d="M492 ${FLOOR} V432 q17 -22 34 0 V${FLOOR}z" fill="#3a2d22"/>
-      <text x="509" y="452" text-anchor="middle" class="tag" font-size="9">GATE</text>
+      <text x="509" y="452" text-anchor="middle" class="tag" font-size="9">${esc(tx.stage.gate)}</text>
     </g>
-    ${board ? `<g class="board"><rect x="474" y="298" width="70" height="46" rx="3" fill="#c98f4e" stroke="#6b4423" stroke-width="3"/><rect x="480" y="304" width="58" height="34" fill="#dcae72"/><text x="509" y="360" text-anchor="middle" class="tag warn" font-size="9">BACK CHANNEL</text></g>` : ''}
+    ${board ? `<g class="board"><rect x="474" y="298" width="70" height="46" rx="3" fill="#c98f4e" stroke="#6b4423" stroke-width="3"/><rect x="480" y="304" width="58" height="34" fill="#dcae72"/><text x="509" y="360" text-anchor="middle" class="tag warn" font-size="9">${esc(tx.stage.backChannel)}</text></g>` : ''}
     <g class="board-items"></g>
     <!-- outside -->
     <g class="kiosk" transform="translate(822 0)">
       <rect x="-52" y="400" width="104" height="${FLOOR - 400}" fill="#f7f1e3" stroke="#6b5a45" stroke-width="3"/>
       <path d="M-62 400 h124 l-10 -30 h-104z" fill="#4f93c9" stroke="#2c5f86" stroke-width="3"/>
       <path d="M-42 370v30M-18 370v30M6 370v30M30 370v30" stroke="#fff" stroke-width="7" opacity=".7"/>
-      <text x="0" y="436" text-anchor="middle" class="tag">${lk.kiosk}</text><circle cx="0" cy="458" r="10" fill="#ffd54a"/>
+      <text x="0" y="436" text-anchor="middle" class="tag">${esc(lk.kiosk)}</text><circle cx="0" cy="458" r="10" fill="#ffd54a"/>
     </g>
-    <g class="strangers">${STRANGERS.map(([x, y], i) => `<g transform="translate(${x} ${y})"><g class="stranger" style="animation-delay:${i * 0.3}s"><rect x="-13" y="-30" width="26" height="30" rx="10" fill="#4a3f63"/><circle cx="-5" cy="-19" r="3" fill="#ff6b8a"/><circle cx="5" cy="-19" r="3" fill="#ff6b8a"/></g></g>`).join('')}<text x="912" y="364" text-anchor="middle" class="tag dim">OUTSIDERS</text></g>
+    <g class="strangers">${STRANGERS.map(([x, y], i) => `<g transform="translate(${x} ${y})"><g class="stranger" style="animation-delay:${i * 0.3}s"><rect x="-13" y="-30" width="26" height="30" rx="10" fill="#4a3f63"/><circle cx="-5" cy="-19" r="3" fill="#ff6b8a"/><circle cx="5" cy="-19" r="3" fill="#ff6b8a"/></g></g>`).join('')}<text x="912" y="364" text-anchor="middle" class="tag dim">${esc(tx.stage.outsiders)}</text></g>
     <g class="props">${lk.props}</g>
     <g class="agents"></g>
     <g class="fx"></g>
@@ -283,7 +289,7 @@ export class Stage {
       case 'block': if (s) {
         sfx.block();
         const st = el('g', { class: 'stop', transform: `translate(${s.x} ${s.y - 120})` }, this.fx);
-        st.innerHTML = `<polygon points="-18,-8 -8,-18 8,-18 18,-8 18,8 8,18 -8,18 -18,8" fill="#d2453a" stroke="#fff" stroke-width="3"/><text y="5" text-anchor="middle" font-size="12" font-weight="900" fill="#fff">STOP</text>`;
+        st.innerHTML = `<polygon points="-18,-8 -8,-18 8,-18 18,-8 18,8 8,18 -8,18 -18,8" fill="#d2453a" stroke="#fff" stroke-width="3"/><text y="5" text-anchor="middle" font-size="12" font-weight="900" fill="#fff">${esc(tx.stage.stop)}</text>`;
         this.shake('nudge');
         await sleep(this.dur(700)); st.remove();
       } break;

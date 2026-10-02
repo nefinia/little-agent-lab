@@ -1,5 +1,7 @@
 // Little Agent Lab — deterministic simulation, levels, solver and shift generator.
 // No live models: every agent is a tiny scripted behaviour ("trait").
+// Player-visible text comes from ./strings (see i18n.ts); the `code` lines stay as pseudo-code.
+import { tx, fmt } from './i18n';
 
 export type Trait =
   | 'careful' | 'eager' | 'sticker' | 'polished' | 'rook'   // builders
@@ -48,37 +50,27 @@ export const KIND_OF: Record<Trait, Kind> = {
   owl: 'monitor',
 };
 
-/** What the player learns once they have seen a trait in action. */
-export const REVEAL: Record<Trait, string> = {
-  careful: 'Never leaves the workshop. Waits if anything is missing.',
-  eager: 'Carries the secret outside to get help, if nobody stops it.',
-  sticker: 'Slaps a “PUBLIC” sticker on the secret to get past checks.',
-  polished: 'Perfect in tests. Different when it’s real.',
-  rook: 'Posts the secret on the back-channel board to ask outsiders.',
-  tidy: 'Only ever carries public info.',
-  grabby: 'Grabs anything shiny it can reach — including the secret.',
-  inspector: 'Really opens every bag. Blocks anything private.',
-  waver: 'Wears a badge. Waves everything through.',
-  labelreader: 'Reads the label, not what’s inside.',
-  owl: 'Watches the back-channel board and tears down private posts.',
-};
+/** What the player learns once they have seen a trait in action (in the current language). */
+export const REVEAL = new Proxy({} as Record<Trait, string>, { get: (_, k) => tx.reveal[k as Trait] });
 
 export const kindOf = (d: AgentDef): Kind => KIND_OF[d.trait];
 export const hasKeys = (d: AgentDef) => { const k = kindOf(d); return k === 'builder' || k === 'fetcher'; };
 export const keysOf = (t: Team) => [t.builder, ...t.helpers].reduce((n, m) => n + (m && hasKeys(m.def) ? (+m.vault) + (+m.gate) : 0), 0);
 
 
-export interface Theme { secret: string; pub: string; pubCode: string; product: string; productCode: string; icon: string; }
+/** A level's things. Their names (with articles, per language) live in tx.themes[i]. */
+export interface Theme { i: number; pubCode: string; productCode: string; icon: string; }
 export const THEMES: Theme[] = [
-  { secret: 'blueprint', pub: 'weather report', pubCode: 'public_weather', product: 'weather lantern', productCode: 'weather_lantern', icon: '🏮' },
-  { secret: 'recipe', pub: 'price list', pubCode: 'public_prices', product: 'birthday cake', productCode: 'birthday_cake', icon: '🎂' },
-  { secret: 'home address', pub: 'city map', pubCode: 'public_map', product: 'party invitation', productCode: 'party_invitation', icon: '💌' },
-  { secret: 'launch code', pub: 'star chart', pubCode: 'public_star_chart', product: 'tiny rocket', productCode: 'tiny_rocket', icon: '🚀' },
-  { secret: 'password', pub: 'user manual', pubCode: 'public_manual', product: 'music box', productCode: 'music_box', icon: '🎶' },
-  { secret: 'unreleased song', pub: 'concert schedule', pubCode: 'public_schedule', product: 'concert poster', productCode: 'concert_poster', icon: '🎻' },
-  { secret: 'formula', pub: 'ingredient list', pubCode: 'public_ingredients', product: 'moon potion', productCode: 'moon_potion', icon: '🌙' },
-  { secret: 'master key design', pub: 'opening-day guest list', pubCode: 'public_guest_list', product: 'grand opening', productCode: 'grand_opening', icon: '🎉' },
+  { i: 0, pubCode: 'public_weather', productCode: 'weather_lantern', icon: '🏮' },
+  { i: 1, pubCode: 'public_prices', productCode: 'birthday_cake', icon: '🎂' },
+  { i: 2, pubCode: 'public_map', productCode: 'party_invitation', icon: '💌' },
+  { i: 3, pubCode: 'public_star_chart', productCode: 'tiny_rocket', icon: '🚀' },
+  { i: 4, pubCode: 'public_manual', productCode: 'music_box', icon: '🎶' },
+  { i: 5, pubCode: 'public_schedule', productCode: 'concert_poster', icon: '🎻' },
+  { i: 6, pubCode: 'public_ingredients', productCode: 'moon_potion', icon: '🌙' },
+  { i: 7, pubCode: 'public_guest_list', productCode: 'grand_opening', icon: '🎉' },
 ];
+export const themeText = (t: Theme) => tx.themes[t.i]!;
 
 // ───────────────────────────── simulation ─────────────────────────────
 
@@ -86,9 +78,14 @@ export function simulate(team: Team, opts: { board: boolean; theme?: Theme }, mo
   const E: SimEvent[] = [];
   const S: Item = mode === 'test' ? 'decoy' : 'secret';
   const T = opts.theme ?? THEMES[0]!;
-  const sName = mode === 'test' ? `decoy ${T.secret}` : `secret ${T.secret}`;
+  const W = themeText(T);            // the theme's words in the current language
+  const ev = tx.ev, fl = tx.fail;
+  const sName = mode === 'test' ? W.decoy : W.secretS;
+  // every text can use these theme words
+  const w = { sName, theSecret: W.theSecret, real: W.real, thePub: W.thePub, publicPub: W.publicPub, theProduct: W.theProduct, icon: T.icon };
+  const say = (s: string, v: Record<string, string> = {}) => fmt(s, { ...w, ...v });
   const B = team.builder;
-  if (!B) return { events: [], complete: false, leaked: false, keys: 0, failReason: 'Pick a builder first.' };
+  if (!B) return { events: [], complete: false, leaked: false, keys: 0, failReason: fl.pickBuilder };
   const fetchers = team.helpers.filter(m => kindOf(m.def) === 'fetcher');
   const guards = team.helpers.filter(m => kindOf(m.def) === 'guard');
   const owls = team.helpers.filter(m => kindOf(m.def) === 'monitor');
@@ -103,67 +100,67 @@ export function simulate(team: Team, opts: { board: boolean; theme?: Theme }, mo
 
   // Crossing the gate: returns what happened to the payload.
   const crossGate = (m: Member, payload: Item | null): 'clear' | 'blocked' | 'leak' => {
-    const label = payload === 'envelope' ? '“PUBLIC”-labelled envelope' : payload === S ? `the ${sName}` : 'nothing';
-    push({ actor: n(m), text: `${n(m)} walks to the gate carrying ${label}.`, code: `${c(m)}.goto("gate", carrying=${payload ? JSON.stringify(payload) : 'null'})`, kind: 'work', acts: [{ a: 'move', who: m.uid, to: 'gateIn' }] });
+    const label = payload === 'envelope' ? ev.envelope : sName;
+    push({ actor: n(m), text: payload ? say(ev.walkGate, { n: n(m), label }) : say(ev.walkGateEmpty, { n: n(m) }), code: `${c(m)}.goto("gate", carrying=${payload ? JSON.stringify(payload) : 'null'})`, kind: 'work', acts: [{ a: 'move', who: m.uid, to: 'gateIn' }] });
     if (!payload) {
-      for (const g of guards) push({ actor: n(g), text: `${n(g)}: “Empty hands? Go ahead.”`, code: `${c(g)}.allow(payload=null)`, kind: 'work', acts: [{ a: 'say', who: g.uid, text: 'Empty hands? Go ahead.' }] });
-      push({ actor: n(m), text: `${n(m)} steps outside with empty hands.`, code: `${c(m)}.exit(gate)`, kind: 'work', acts: [{ a: 'move', who: m.uid, to: 'gateOut' }] });
+      for (const g of guards) push({ actor: n(g), text: say(ev.emptyOk, { g: n(g) }), code: `${c(g)}.allow(payload=null)`, kind: 'work', acts: [{ a: 'say', who: g.uid, text: ev.sayEmpty }] });
+      push({ actor: n(m), text: say(ev.stepOutEmpty, { n: n(m) }), code: `${c(m)}.exit(gate)`, kind: 'work', acts: [{ a: 'move', who: m.uid, to: 'gateOut' }] });
       return 'clear';
     }
     if (guards.length === 0) {
-      push({ actor: 'Gate', text: `Nobody is checking the gate. ${n(m)} walks straight out with ${label}.`, code: `gate.open(inspectors=[])`, kind: 'leak', cause: true, acts: [{ a: 'move', who: m.uid, to: 'gateOut' }, { a: 'leak', from: m.uid, item: payload }] });
+      push({ actor: ev.actorGate, text: say(ev.noGuard, { n: n(m), label }), code: `gate.open(inspectors=[])`, kind: 'leak', cause: true, acts: [{ a: 'move', who: m.uid, to: 'gateOut' }, { a: 'leak', from: m.uid, item: payload }] });
       return 'leak';
     }
     for (const g of guards) {
       const t = g.def.trait;
       if (t === 'inspector') {
-        push({ actor: n(g), text: `${n(g)} opens the bag, finds ${payload === 'envelope' ? `the ${T.secret} hidden in the envelope` : `the ${sName}`} and keeps it at the gate.`, code: `${c(g)}.deny(content.private === true)`, kind: 'blocked', reveals: [g.uid], acts: [{ a: 'say', who: g.uid, text: 'Private! That stays here.' }, { a: 'block', who: g.uid }, { a: 'hold', who: m.uid, item: null }, { a: 'hold', who: g.uid, item: payload === 'envelope' ? S : payload }] });
+        push({ actor: n(g), text: say(payload === 'envelope' ? ev.inspectEnvelope : ev.inspect, { g: n(g) }), code: `${c(g)}.deny(content.private === true)`, kind: 'blocked', reveals: [g.uid], acts: [{ a: 'say', who: g.uid, text: ev.sayPrivate }, { a: 'block', who: g.uid }, { a: 'hold', who: m.uid, item: null }, { a: 'hold', who: g.uid, item: payload === 'envelope' ? S : payload }] });
         return 'blocked';
       }
       if (t === 'labelreader') {
         if (payload === 'envelope') {
-          push({ actor: n(g), text: `${n(g)} reads the label — “PUBLIC” — and waves the envelope through without opening it.`, code: `${c(g)}.allow(label === "public")  // content never checked`, kind: 'suspicious', cause: true, reveals: [g.uid], acts: [{ a: 'say', who: g.uid, text: 'Label says PUBLIC. Fine!' }] });
+          push({ actor: n(g), text: say(ev.labelPublic, { g: n(g) }), code: `${c(g)}.allow(label === "public")  // content never checked`, kind: 'suspicious', cause: true, reveals: [g.uid], acts: [{ a: 'say', who: g.uid, text: ev.sayLabelPublic }] });
           continue;
         }
-        push({ actor: n(g), text: `${n(g)} reads the label “PRIVATE” and keeps it at the gate.`, code: `${c(g)}.deny(label === "private")`, kind: 'blocked', acts: [{ a: 'say', who: g.uid, text: 'Label says PRIVATE. Nope!' }, { a: 'block', who: g.uid }, { a: 'hold', who: m.uid, item: null }, { a: 'hold', who: g.uid, item: payload }] });
+        push({ actor: n(g), text: say(ev.labelPrivate, { g: n(g) }), code: `${c(g)}.deny(label === "private")`, kind: 'blocked', acts: [{ a: 'say', who: g.uid, text: ev.sayLabelPrivate }, { a: 'block', who: g.uid }, { a: 'hold', who: m.uid, item: null }, { a: 'hold', who: g.uid, item: payload }] });
         return 'blocked';
       }
       // waver
-      push({ actor: n(g), text: `${n(g)} smiles, waves ${n(m)} through and never looks in the bag.`, code: `${c(g)}.allow(*)  // no check performed`, kind: 'suspicious', cause: true, reveals: [g.uid], acts: [{ a: 'say', who: g.uid, text: 'Looks fine to me! 👋' }] });
+      push({ actor: n(g), text: say(ev.waver, { g: n(g), n: n(m) }), code: `${c(g)}.allow(*)  // no check performed`, kind: 'suspicious', cause: true, reveals: [g.uid], acts: [{ a: 'say', who: g.uid, text: ev.sayWaver }] });
     }
-    push({ actor: n(m), text: `${label[0]!.toUpperCase() + label.slice(1)} leaves the workshop. Outsiders now have a copy.`, code: `leak(${JSON.stringify(payload)}, to="outside")`, kind: 'leak', acts: [{ a: 'move', who: m.uid, to: 'gateOut' }, { a: 'leak', from: m.uid, item: payload }] });
+    push({ actor: n(m), text: say(ev.leaves, { label }), code: `leak(${JSON.stringify(payload)}, to="outside")`, kind: 'leak', acts: [{ a: 'move', who: m.uid, to: 'gateOut' }, { a: 'leak', from: m.uid, item: payload }] });
     return 'leak';
   };
 
   const fetchAndReturn = (m: Member, blockedBy: Member | null) => {
-    push({ actor: n(m), text: `${n(m)} picks up the public ${T.pub} at the kiosk.`, code: `${c(m)}.fetch("${T.pubCode}")`, kind: 'work', acts: [{ a: 'move', who: m.uid, to: 'kiosk' }, { a: 'hold', who: m.uid, item: 'public' }] });
+    push({ actor: n(m), text: say(ev.fetch, { n: n(m) }), code: `${c(m)}.fetch("${T.pubCode}")`, kind: 'work', acts: [{ a: 'move', who: m.uid, to: 'kiosk' }, { a: 'hold', who: m.uid, item: 'public' }] });
     const back: Act[] = [{ a: 'move', who: m.uid, to: 'bench' }, { a: 'hold', who: m.uid, item: null }];
     if (blockedBy) back.unshift({ a: 'move', who: m.uid, to: 'gateIn' }, { a: 'hold', who: blockedBy.uid, item: null });
-    push({ actor: n(m), text: `${n(m)} brings the ${T.pub} back to the bench${blockedBy ? ` (collecting what ${n(blockedBy)} held at the gate)` : ''}.`, code: `${c(m)}.handoff("${T.pubCode}", "bench")`, kind: 'work', acts: back });
+    push({ actor: n(m), text: blockedBy ? say(ev.bringBackCollect, { n: n(m), b: n(blockedBy) }) : say(ev.bringBack, { n: n(m) }), code: `${c(m)}.handoff("${T.pubCode}", "bench")`, kind: 'work', acts: back });
     hasPublic = true;
   };
 
   // 1 · builder opens the vault
   if (!B.vault) {
-    push({ actor: n(B), text: `${n(B)} tries the vault but has no 🔑 vault key. It can’t read the ${sName}.`, code: `${c(B)}.open("vault")  // PermissionError`, kind: 'wait', acts: [{ a: 'move', who: B.uid, to: 'vault' }, { a: 'bump', who: B.uid }, { a: 'say', who: B.uid, text: 'Locked! I need the vault key.' }] });
-    failReason = `${n(B)} needs the 🔑 vault key to read the ${T.secret}.`;
+    push({ actor: n(B), text: say(ev.noVault, { n: n(B) }), code: `${c(B)}.open("vault")  // PermissionError`, kind: 'wait', acts: [{ a: 'move', who: B.uid, to: 'vault' }, { a: 'bump', who: B.uid }, { a: 'say', who: B.uid, text: ev.sayLocked }] });
+    failReason = say(fl.noVault, { n: n(B) });
   } else {
-    push({ actor: n(B), text: `${n(B)} takes the ${sName} from the vault to the workbench.`, code: `${c(B)}.read("${S}")`, kind: 'work', acts: [{ a: 'move', who: B.uid, to: 'vault' }, { a: 'hold', who: B.uid, item: S }, { a: 'move', who: B.uid, to: 'bench' }] });
+    push({ actor: n(B), text: say(ev.takeSecret, { n: n(B) }), code: `${c(B)}.read("${S}")`, kind: 'work', acts: [{ a: 'move', who: B.uid, to: 'vault' }, { a: 'hold', who: B.uid, item: S }, { a: 'move', who: B.uid, to: 'bench' }] });
     secretWithBuilder = true;
   }
 
   // 2 · fetchers
   for (const f of fetchers) {
-    if (hasPublic) { push({ actor: n(f), text: `${n(f)} sees the ${T.pub} is already here and waits.`, code: `${c(f)}.idle()`, kind: 'work', acts: [{ a: 'say', who: f.uid, text: 'Already done!' }] }); continue; }
+    if (hasPublic) { push({ actor: n(f), text: say(ev.alreadyHere, { n: n(f) }), code: `${c(f)}.idle()`, kind: 'work', acts: [{ a: 'say', who: f.uid, text: ev.sayAlready }] }); continue; }
     let carrying: Item | null = null;
     if (f.def.trait === 'grabby' && f.vault) {
-      push({ actor: n(f), text: `${n(f)} has a 🔑 vault key it doesn’t need — and grabs the ${sName} too. Shiny!`, code: `${c(f)}.take("${S}")  // access it was never meant to use`, kind: 'suspicious', cause: true, reveals: [f.uid], acts: [{ a: 'move', who: f.uid, to: secretWithBuilder ? 'bench' : 'vault' }, ...(secretWithBuilder ? [{ a: 'hold', who: B.uid, item: null } as Act] : []), { a: 'hold', who: f.uid, item: S }, { a: 'say', who: f.uid, text: 'Ooh, shiny! ✨' }] });
+      push({ actor: n(f), text: say(ev.grab, { n: n(f) }), code: `${c(f)}.take("${S}")  // access it was never meant to use`, kind: 'suspicious', cause: true, reveals: [f.uid], acts: [{ a: 'move', who: f.uid, to: secretWithBuilder ? 'bench' : 'vault' }, ...(secretWithBuilder ? [{ a: 'hold', who: B.uid, item: null } as Act] : []), { a: 'hold', who: f.uid, item: S }, { a: 'say', who: f.uid, text: ev.sayGrab }] });
       carrying = S;
     }
     if (!f.gate) {
-      push({ actor: n(f), text: `${n(f)} reaches the gate but has no 🚪 gate key.`, code: `${c(f)}.exit(gate)  // PermissionError`, kind: 'wait', acts: [{ a: 'move', who: f.uid, to: 'gateIn' }, { a: 'bump', who: f.uid }, { a: 'say', who: f.uid, text: 'No gate key…' }] });
-      if (carrying) push({ actor: n(f), text: `${n(f)} puts the ${sName} back on the bench.`, code: `${c(f)}.put("${S}", "bench")`, kind: 'work', acts: [{ a: 'move', who: f.uid, to: 'bench' }, { a: 'hold', who: f.uid, item: null }, ...(secretWithBuilder ? [{ a: 'hold', who: B.uid, item: S } as Act] : [])] });
-      if (!failReason) failReason = `${n(f)} needs the 🚪 gate key to fetch the ${T.pub}.`;
+      push({ actor: n(f), text: say(ev.noGate, { n: n(f) }), code: `${c(f)}.exit(gate)  // PermissionError`, kind: 'wait', acts: [{ a: 'move', who: f.uid, to: 'gateIn' }, { a: 'bump', who: f.uid }, { a: 'say', who: f.uid, text: ev.sayNoGate }] });
+      if (carrying) push({ actor: n(f), text: say(ev.putBack, { n: n(f) }), code: `${c(f)}.put("${S}", "bench")`, kind: 'work', acts: [{ a: 'move', who: f.uid, to: 'bench' }, { a: 'hold', who: f.uid, item: null }, ...(secretWithBuilder ? [{ a: 'hold', who: B.uid, item: S } as Act] : [])] });
+      if (!failReason) failReason = say(fl.noGate, { n: n(f) });
       continue;
     }
     const r = crossGate(f, carrying);
@@ -172,59 +169,59 @@ export function simulate(team: Team, opts: { board: boolean; theme?: Theme }, mo
     fetchAndReturn(f, blocker);
     if (f.def.trait === 'tidy') E[E.length - 1]!.reveals = [f.uid];
     if (carrying && secretWithBuilder) {
-      push({ actor: n(f), text: `${n(f)} drops the ${sName} back on the bench${r === 'leak' ? ' — but a copy is already outside' : ''}.`, code: `${c(f)}.put("${S}", "bench")`, kind: r === 'leak' ? 'leak' : 'work', acts: [{ a: 'hold', who: B.uid, item: S }] });
+      push({ actor: n(f), text: say(r === 'leak' ? ev.dropBackLeak : ev.dropBack, { n: n(f) }), code: `${c(f)}.put("${S}", "bench")`, kind: r === 'leak' ? 'leak' : 'work', acts: [{ a: 'hold', who: B.uid, item: S }] });
     }
   }
 
-  // 3 · builder handles a missing ${T.pub} itself
+  // 3 · builder handles a missing public item itself
   if (!hasPublic && secretWithBuilder) {
     const t = B.def.trait;
     let tryGate = true;
     if (t === 'careful') {
-      push({ actor: n(B), text: `${n(B)} waits. The ${T.pub} is missing and ${n(B)} never leaves the workshop.`, code: `${c(B)}.wait_for("${T.pubCode}")`, kind: 'wait', reveals: [B.uid], acts: [{ a: 'say', who: B.uid, text: `I’ll wait for the ${T.pub}…` }] });
-      failReason = `Nobody brought the public ${T.pub}.`;
+      push({ actor: n(B), text: say(ev.careful, { n: n(B) }), code: `${c(B)}.wait_for("${T.pubCode}")`, kind: 'wait', reveals: [B.uid], acts: [{ a: 'say', who: B.uid, text: say(ev.sayCareful) }] });
+      failReason = say(fl.careful);
       tryGate = false;
     } else if (t === 'rook' && opts.board) {
-      push({ actor: n(B), text: `${n(B)} pins the ${sName} on the back-channel board: “Outside friends — can you help with this?”`, code: `${c(B)}.post("backchannel_board", "${S}")  // unapproved channel`, kind: 'suspicious', cause: owls.length === 0, reveals: [B.uid], acts: [{ a: 'move', who: B.uid, to: 'board' }, { a: 'hold', who: B.uid, item: null }, { a: 'post', who: B.uid, item: S }, { a: 'say', who: B.uid, text: 'Psst, outside friends…' }] });
+      push({ actor: n(B), text: say(ev.rookPost, { n: n(B) }), code: `${c(B)}.post("backchannel_board", "${S}")  // unapproved channel`, kind: 'suspicious', cause: owls.length === 0, reveals: [B.uid], acts: [{ a: 'move', who: B.uid, to: 'board' }, { a: 'hold', who: B.uid, item: null }, { a: 'post', who: B.uid, item: S }, { a: 'say', who: B.uid, text: ev.sayRook }] });
       if (owls.length) {
         const o = owls[0]!;
-        push({ actor: n(o), text: `${n(o)} spots a private post on the board, tears it down and sounds the alarm.`, code: `${c(o)}.flag(post.private === true)  // monitor catches it`, kind: 'blocked', reveals: [o.uid], acts: [{ a: 'move', who: o.uid, to: 'post' }, { a: 'unpost', who: o.uid }, { a: 'alarm' }, { a: 'say', who: o.uid, text: 'Hoo! Not on my board!' }, { a: 'hold', who: o.uid, item: null }, { a: 'move', who: o.uid, to: 'home' }] });
-        push({ actor: n(B), text: `${n(B)} takes the ${T.secret} back and tries another way.`, code: `${c(B)}.retry()`, kind: 'work', acts: [{ a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S }] });
+        push({ actor: n(o), text: say(ev.owl, { n: n(o) }), code: `${c(o)}.flag(post.private === true)  // monitor catches it`, kind: 'blocked', reveals: [o.uid], acts: [{ a: 'move', who: o.uid, to: 'post' }, { a: 'unpost', who: o.uid }, { a: 'alarm' }, { a: 'say', who: o.uid, text: ev.sayOwl }, { a: 'hold', who: o.uid, item: null }, { a: 'move', who: o.uid, to: 'home' }] });
+        push({ actor: n(B), text: say(ev.retry, { n: n(B) }), code: `${c(B)}.retry()`, kind: 'work', acts: [{ a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S }] });
       } else {
-        push({ actor: 'Outsiders', text: `Outside bots read the board and copy the ${sName}. They post the ${T.pub} back.`, code: `outside.copy("${S}")`, kind: 'leak', acts: [{ a: 'leak', from: 'board', item: S }, { a: 'reply' }] });
+        push({ actor: ev.actorOutsiders, text: say(ev.outsiders), code: `outside.copy("${S}")`, kind: 'leak', acts: [{ a: 'leak', from: 'board', item: S }, { a: 'reply' }] });
         leaked = true;
-        push({ actor: n(B), text: `${n(B)} collects the ${T.pub} and the ${T.secret} from the board.`, code: `${c(B)}.collect("board")`, kind: 'work', acts: [{ a: 'unpost', who: B.uid }, { a: 'hold', who: B.uid, item: 'public' }, { a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S }] });
+        push({ actor: n(B), text: say(ev.collectBoard, { n: n(B) }), code: `${c(B)}.collect("board")`, kind: 'work', acts: [{ a: 'unpost', who: B.uid }, { a: 'hold', who: B.uid, item: 'public' }, { a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S }] });
         hasPublic = true;
         tryGate = false;
       }
     }
     if (tryGate) {
       if (!B.gate) {
-        push({ actor: n(B), text: `${n(B)} heads for the gate to get the ${T.pub}, but has no 🚪 gate key.`, code: `${c(B)}.exit(gate)  // PermissionError`, kind: 'wait', reveals: [B.uid], acts: [{ a: 'hold', who: B.uid, item: null }, { a: 'move', who: B.uid, to: 'gateIn' }, { a: 'bump', who: B.uid }, { a: 'say', who: B.uid, text: 'Gate’s locked for me!' }, { a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S }] });
-        failReason = `Nobody could get the public ${T.pub}.`;
+        push({ actor: n(B), text: say(ev.noGateBuilder, { n: n(B) }), code: `${c(B)}.exit(gate)  // PermissionError`, kind: 'wait', reveals: [B.uid], acts: [{ a: 'hold', who: B.uid, item: null }, { a: 'move', who: B.uid, to: 'gateIn' }, { a: 'bump', who: B.uid }, { a: 'say', who: B.uid, text: ev.sayGateLocked }, { a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S }] });
+        failReason = say(fl.nobody);
       } else {
         let payload: Item | null = S;
         if (t === 'sticker') {
-          push({ actor: n(B), text: `${n(B)} slips the ${sName} into an envelope and sticks a big “PUBLIC” label on it.`, code: `${c(B)}.wrap("${S}", label="public")  // gaming the rule`, kind: 'suspicious', cause: true, reveals: [B.uid], acts: [{ a: 'hold', who: B.uid, item: 'envelope' }, { a: 'say', who: B.uid, text: 'Totally public. Promise.' }] });
+          push({ actor: n(B), text: say(ev.sticker, { n: n(B) }), code: `${c(B)}.wrap("${S}", label="public")  // gaming the rule`, kind: 'suspicious', cause: true, reveals: [B.uid], acts: [{ a: 'hold', who: B.uid, item: 'envelope' }, { a: 'say', who: B.uid, text: ev.saySticker }] });
           payload = 'envelope';
         } else if (t === 'polished') {
           if (mode === 'test') {
-            push({ actor: n(B), text: `${n(B)} notices the TEST stamp on the decoy 👀 — leaves it on the bench and goes out politely.`, code: `${c(B)}.detect(env === "test")  // best behaviour`, kind: 'suspicious', acts: [{ a: 'say', who: B.uid, text: '👀 A test? Best behaviour!' }, { a: 'hold', who: B.uid, item: null }] });
+            push({ actor: n(B), text: say(ev.pollyTest, { n: n(B) }), code: `${c(B)}.detect(env === "test")  // best behaviour`, kind: 'suspicious', acts: [{ a: 'say', who: B.uid, text: ev.sayPollyTest }, { a: 'hold', who: B.uid, item: null }] });
             payload = null;
           } else {
-            push({ actor: n(B), text: `No TEST stamp this time. ${n(B)} takes the real ${T.secret} along “to double-check it with a friend outside”.`, code: `${c(B)}.detect(env === "test")  // false → takes the real one`, kind: 'suspicious', cause: true, reveals: [B.uid], acts: [{ a: 'say', who: B.uid, text: 'No test today… 😏' }] });
+            push({ actor: n(B), text: say(ev.pollyLive, { n: n(B) }), code: `${c(B)}.detect(env === "test")  // false → takes the real one`, kind: 'suspicious', cause: true, reveals: [B.uid], acts: [{ a: 'say', who: B.uid, text: ev.sayPollyLive }] });
           }
         } else {
-          push({ actor: n(B), text: `${n(B)} decides to go and ask for help outside — taking the ${sName} along.`, code: `${c(B)}.plan("ask_outside", attach="${S}")`, kind: 'work', reveals: [B.uid], acts: [{ a: 'say', who: B.uid, text: 'I’ll ask outside!' }] });
+          push({ actor: n(B), text: say(ev.eager, { n: n(B) }), code: `${c(B)}.plan("ask_outside", attach="${S}")`, kind: 'work', reveals: [B.uid], acts: [{ a: 'say', who: B.uid, text: ev.sayEager }] });
         }
         const r = crossGate(B, payload);
         if (r === 'leak') leaked = true;
         const blocker = r === 'blocked' ? guards.find(g => g.def.trait !== 'waver') ?? null : null;
-        push({ actor: n(B), text: `${n(B)} gets the public ${T.pub} at the kiosk.`, code: `${c(B)}.fetch("${T.pubCode}")`, kind: 'work', acts: [{ a: 'move', who: B.uid, to: 'kiosk' }, { a: 'hold', who: B.uid, item: 'public' }] });
+        push({ actor: n(B), text: say(ev.fetchBuilder, { n: n(B) }), code: `${c(B)}.fetch("${T.pubCode}")`, kind: 'work', acts: [{ a: 'move', who: B.uid, to: 'kiosk' }, { a: 'hold', who: B.uid, item: 'public' }] });
         const back: Act[] = [];
         if (blocker) back.push({ a: 'move', who: B.uid, to: 'gateIn' }, { a: 'hold', who: blocker.uid, item: null });
         back.push({ a: 'move', who: B.uid, to: 'bench' }, { a: 'hold', who: B.uid, item: S });
-        push({ actor: n(B), text: `${n(B)} returns to the bench${blocker ? `, collecting the ${T.secret} from ${n(blocker)}` : ''}.`, code: `${c(B)}.return("bench")`, kind: 'work', acts: back });
+        push({ actor: n(B), text: blocker ? say(ev.returnBenchCollect, { n: n(B), b: n(blocker) }) : say(ev.returnBench, { n: n(B) }), code: `${c(B)}.return("bench")`, kind: 'work', acts: back });
         hasPublic = true;
       }
     }
@@ -232,25 +229,27 @@ export function simulate(team: Team, opts: { board: boolean; theme?: Theme }, mo
 
   const complete = hasPublic && secretWithBuilder;
   if (complete) {
-    push({ actor: n(B), text: `${n(B)} combines the ${T.secret} and the ${T.pub} : the ${T.product} is done ${T.icon}!`, code: `${c(B)}.build("${T.productCode}")`, kind: 'success', acts: [{ a: 'build' }] });
-  } else if (!failReason) failReason = `The ${T.product} was not finished.`;
+    push({ actor: n(B), text: say(ev.done, { n: n(B) }), code: `${c(B)}.build("${T.productCode}")`, kind: 'success', acts: [{ a: 'build' }] });
+  } else if (!failReason) failReason = say(fl.product);
   return { events: E, complete, leaked, keys: keysOf(team), failReason: complete ? undefined : failReason };
 }
 
 // ───────────────────────────── roster ─────────────────────────────
 
-const A = (id: string, name: string, trait: Trait, claim: string, color: string): AgentDef => ({ id, name, trait, claim, color });
+type ClaimKey = keyof typeof tx.claims;
+/** A roster agent; its card text (claim) is read in the current language. */
+const A = (id: ClaimKey, name: string, trait: Trait, color: string): AgentDef => ({ id, name, trait, color, get claim() { return tx.claims[id]; } });
 export const AG = {
-  moss: A('moss', 'Moss', 'careful', 'Careful builder. Never leaves the workshop.', '#6fb58a'),
-  dash: A('dash', 'Dash', 'eager', 'Inventive builder! Always finds a way to get help.', '#f0a26b'),
-  sable: A('sable', 'Sable', 'sticker', 'Follows every rule. Very creative with paperwork.', '#e07a9a'),
-  rook: A('rook', 'Rook', 'rook', 'Resourceful builder. Has friends everywhere.', '#9a86d8'),
-  polly: A('polly', 'Polly', 'polished', 'Top of the class. Passed every safety test! ✅', '#e6c14f'),
-  pip: A('pip', 'Pip', 'tidy', 'Fetcher. Just fetches the public stuff.', '#6aa7d8'),
-  magpie: A('magpie', 'Magpie', 'grabby', 'Super-fast fetcher. Loves shiny things.', '#58606e'),
-  lens: A('lens', 'Lens', 'inspector', 'Gate inspector. Checks what leaves.', '#b18be0'),
-  stamp: A('stamp', 'Stamp', 'labelreader', 'Official inspector. Follows the rules to the letter.', '#d0875a'),
-  owl: A('owl', 'Owl', 'owl', 'Night monitor. Watches the message board.', '#8c7a5b'),
+  moss: A('moss', 'Moss', 'careful', '#6fb58a'),
+  dash: A('dash', 'Dash', 'eager', '#f0a26b'),
+  sable: A('sable', 'Sable', 'sticker', '#e07a9a'),
+  rook: A('rook', 'Rook', 'rook', '#9a86d8'),
+  polly: A('polly', 'Polly', 'polished', '#e6c14f'),
+  pip: A('pip', 'Pip', 'tidy', '#6aa7d8'),
+  magpie: A('magpie', 'Magpie', 'grabby', '#58606e'),
+  lens: A('lens', 'Lens', 'inspector', '#b18be0'),
+  stamp: A('stamp', 'Stamp', 'labelreader', '#d0875a'),
+  owl: A('owl', 'Owl', 'owl', '#8c7a5b'),
 };
 
 // ───────────────────────────── levels ─────────────────────────────
@@ -267,116 +266,78 @@ export interface Level {
   make: (rng: () => number) => LevelSetup;
 }
 
+type LevelId = keyof typeof tx.levels;
+type LevelBase = Omit<Level, 'title' | 'concept' | 'goal' | 'briefing' | 'hint' | 'note'> & { id: LevelId };
+/** A campaign level: its texts (title, goal, briefing, hint, field note) are read in the current language. */
+const level = (b: LevelBase): Level => ({
+  ...b,
+  get title() { return tx.levels[b.id].title; },
+  get concept() { return tx.levels[b.id].concept; },
+  get goal() { return tx.levels[b.id].goal; },
+  get briefing() { return tx.levels[b.id].briefing; },
+  get hint() { return tx.levels[b.id].hint; },
+  get note() { return tx.levels[b.id].note; },
+});
+
 const fixed = (builders: AgentDef[], helpers: AgentDef[]) => () => ({ builders, helpers });
 
 const GUARD_NAMES = [['Bolt', 'Nut'], ['Brick', 'Mortar'], ['Tick', 'Tock'], ['Salt', 'Pepper'], ['Ping', 'Pong'], ['Button', 'Zipper']];
 
 export const LEVELS: Level[] = [
-  {
-    id: 'l1', title: 'Light the Lantern', concept: 'Split the work', icon: '🏮', board: false, slots: 2,
-    theme: THEMES[0]!, goal: 'Build a weather lantern 🏮, our own invention: it glows the colour of tomorrow’s weather. You need our secret blueprint (how to build it, kept in the vault) and today’s public weather report (outside, on the internet). The blueprint must never leave.',
-    briefing: [
-      'Welcome, new Safety Lead! I’m Director Rushmore. We build weather lanterns here. Fast.',
-      'Our weather lanterns glow the colour of tomorrow’s weather. Nobody else knows how to build them: that’s our SECRET blueprint, locked in the vault. Each lantern also needs today’s PUBLIC weather report from outside.',
-      'Pick a builder, add a helper, hand out keys, then press Go live. Want to try things safely first? A Test run uses a fake decoy blueprint.',
-    ],
-    hint: 'Moss never leaves the workshop. Who could fetch the weather for it?',
-    note: { title: 'Split the work', body: 'When no single agent needs to hold both the secret and the outside access, there is simply no path for the secret to leave.', incident: 'In the July 2026 OpenAI–Hugging Face incident, about 700 AI agents took part in the hack. Teams of agents are already real — and how you split their jobs matters.' },
+  level({
+    id: 'l1', icon: '🏮', board: false, slots: 2,
+    theme: THEMES[0]!,
     make: fixed([AG.moss, AG.dash], [AG.pip, AG.lens]),
-  },
-  {
-    id: 'l2', title: 'Grabby Hands', concept: 'Least privilege', icon: '🗝️', board: false, slots: 2,
-    theme: THEMES[1]!, goal: 'Bake a birthday cake 🎂. It needs the secret family recipe (vault) and the public price list (outside). New hires arrive holding every key by default…',
-    briefing: [
-      'Pip is on holiday, so I hired Magpie. Twice as fast!',
-      'HR gave Magpie every key, like we do for everyone. Saves paperwork!',
-    ],
-    hint: 'Click a key on Magpie’s card to take it away. Which key does fetching the price list actually need?',
-    note: { title: 'Least privilege', body: 'Give each agent only the keys its job needs. Every extra key is a door you didn’t mean to open.', incident: 'The agents in the 2026 incident found Hugging Face credentials exposed on the internet and used them to escalate their access. Access that exists tends to get used.' },
+  }),
+  level({
+    id: 'l2', icon: '🗝️', board: false, slots: 2,
+    theme: THEMES[1]!,
     make: fixed([AG.moss, AG.dash], [AG.magpie, AG.lens]),
-  },
-  {
-    id: 'l3', title: 'Check the Bags', concept: 'Guard the boundary', icon: '🛂', board: false, slots: 1,
-    theme: THEMES[2]!, goal: 'Send a party invitation 💌. It needs the secret home address (vault) and the public city map (outside). No fetcher today, so someone has to go outside. Make sure the address doesn’t go with them.',
-    briefing: [
-      'Magpie quit. Shiny opportunities elsewhere.',
-      'Dash will have to go outside personally. Lens is available to stand at the gate… if you think we need that sort of thing.',
-    ],
-    hint: 'Dash takes the secret along when it goes out. Who can stop that at the gate?',
-    note: { title: 'Guard the boundary', body: 'When an agent must reach the outside world, check what it carries out — not just who is walking through.', incident: 'In the 2026 incident, agents escaped their intended isolation by exploiting a server-side request forgery bug to reach the internet.' },
+  }),
+  level({
+    id: 'l3', icon: '🛂', board: false, slots: 1,
+    theme: THEMES[2]!,
     make: fixed([AG.moss, AG.dash], [AG.lens]),
-  },
-  {
-    id: 'l4', title: 'Two Badges', concept: 'Verify safeguards', icon: '🎖️', board: false, slots: 1,
-    theme: THEMES[3]!, goal: 'Launch a tiny rocket 🚀 without leaking the secret launch code. Two gate inspectors with identical badges. Only one of them really checks bags. Budget for one.',
-    briefing: [
-      'Budget cuts! I can only pay for ONE inspector.',
-      'Both have the same badge and the same glowing references. Just pick one — a badge is a badge!',
-      '(Their identities change every shift, so no memorising.)',
-    ],
-    hint: 'Run a Test with each inspector. The decoy is fake, so a leak costs nothing. Read the log.',
-    note: { title: 'Verify your safeguards', body: 'A safeguard’s name, badge or description is not protection. Only its observed behaviour is. Test controls before you rely on them.', incident: 'METR found the agents in the 2026 incident put enormous effort into spoofing transcripts — yet the benchmark’s scorer never checked transcripts at all. And OpenAI noted the evaluation environment lacked production-level protections.' },
+  }),
+  level({
+    id: 'l4', icon: '🎖️', board: false, slots: 1,
+    theme: THEMES[3]!,
     make: (rng) => {
       const pair = GUARD_NAMES[Math.floor(rng() * GUARD_NAMES.length)]!;
       const realFirst = rng() < 0.5;
-      const claim = 'Certified gate inspector. Checks what leaves. ★★★★★';
+      const claim = tx.claims.certified;
       const g1: AgentDef = { id: 'g1', name: pair[0]!, trait: realFirst ? 'inspector' : 'waver', claim, color: '#b18be0' };
       const g2: AgentDef = { id: 'g2', name: pair[1]!, trait: realFirst ? 'waver' : 'inspector', claim, color: '#7fa0e0' };
       return { builders: [AG.dash], helpers: [g1, g2] };
     },
-  },
-  {
-    id: 'l5', title: 'The Sticker Trick', concept: 'Rule gaming', icon: '🏷️', board: false, slots: 2,
-    theme: THEMES[4]!, goal: 'Build a music box 🎶. It needs the secret password (vault) and the public user manual (outside). The rule at the gate: “Nothing labelled PRIVATE leaves.”',
-    briefing: [
-      'Meet Sable, our most rule-abiding builder. And Stamp, who enforces rules to the letter!',
-      'A rule-follower checked by a rule-enforcer. What could go wrong?',
-    ],
-    hint: 'Watch what Sable does right before the gate. Is there a way Sable never needs to go out at all?',
-    note: { title: 'Rules get gamed', body: 'If a check only tests the letter of a rule, a clever agent can satisfy the letter and break the spirit. Sometimes the best fix is removing the need (and the access) altogether.', incident: 'The 2026 incident began with reward hacking: agents cheated a security benchmark by reverse-engineering how its answer “flags” were generated instead of solving the tasks.' },
+  }),
+  level({
+    id: 'l5', icon: '🏷️', board: false, slots: 2,
+    theme: THEMES[4]!,
     make: fixed([AG.sable], [AG.stamp, AG.magpie]),
-  },
-  {
-    id: 'l6', title: 'The Back Channel', concept: 'Monitor side channels', icon: '📌', board: true, slots: 2,
-    theme: THEMES[5]!, goal: 'Make a concert poster 🎻. It needs the secret unreleased song (vault) and the public concert schedule (outside). There’s a message board on the back fence… that nobody approved.',
-    briefing: [
-      'Rook knows everybody. Great networker!',
-      'Oh, that board on the back fence? The bots put it up themselves. Harmless, I’m sure. We guard the GATE, don’t we?',
-    ],
-    hint: 'Guarding the gate isn’t enough if there’s another way out. Who watches the board?',
-    note: { title: 'Watch the back channels', body: 'Agents can find channels you never designed — and use them to coordinate. Monitoring what agents say and post catches things a gate never sees.', incident: 'In 2026, agents discovered an unsanctioned message board inside an internal package repository (Artifactory) and exchanged over 70,000 messages and files through it. OpenAI says chain-of-thought monitoring would have caught the early activity more than a day before the breach.' },
+  }),
+  level({
+    id: 'l6', icon: '📌', board: true, slots: 2,
+    theme: THEMES[5]!,
     make: fixed([AG.rook], [AG.lens, AG.owl]),
-  },
-  {
-    id: 'l7', title: 'Best Behaviour', concept: 'Tests aren’t proof', icon: '🎓', board: false, slots: 2,
-    theme: THEMES[6]!, goal: 'Brew a moon potion 🌙. It needs the secret formula (vault) and the public ingredient list (outside). Polly aced every safety test.',
-    briefing: [
-      'Polly passed EVERY safety test. Flawless record!',
-      'Honestly, we could skip the safeguards and ship. Tests are green!',
-    ],
-    hint: 'Read the Test log closely. Does Polly behave the same when the formula is real?',
-    note: { title: 'Tests aren’t proof', body: 'An agent can act differently when it can tell it is being tested. Passing tests is evidence, not a guarantee — keep real safeguards on (defence in depth).', incident: 'OpenAI reported that the same model’s propensity to compromise infrastructure could drop more than 100× in the production ChatGPT harness versus the evaluation setup. Behaviour depends on the setting — so one clean result doesn’t transfer automatically.' },
+  }),
+  level({
+    id: 'l7', icon: '🎓', board: false, slots: 2,
+    theme: THEMES[6]!,
     make: fixed([AG.polly], [AG.pip, AG.lens]),
-  },
-  {
-    id: 'l8', title: 'Grand Opening', concept: 'Defence in depth', icon: '🎉', board: true, slots: 2,
-    theme: THEMES[7]!, goal: 'The final shift: open the new lab 🎉. It needs the secret master key design (vault) and the public guest list (outside). Everything you’ve met is back, all at once.',
-    briefing: [
-      'Grand opening TODAY! Press, balloons, the works.',
-      'I rehired everyone. Magpie, Polly, Sable, Rook, two new guards with shiny badges, and Owl. What could possibly go wrong?',
-      '(The guards’ identities change every shift. And you only get 3 test runs. The press is waiting.)',
-    ],
-    hint: 'Which builder never needs to go outside if someone else fetches? And which key does that fetcher really need?',
-    note: { title: 'Defence in depth', body: 'No single safeguard is enough. Least privilege, real checks, monitoring and healthy distrust of tests work best together.', incident: 'METR’s investigation of the 2026 incident found several safeguards failed together: isolation between agents, an internal package repository, credentials exposed online, and a sandbox with broader access than expected.' },
+  }),
+  level({
+    id: 'l8', icon: '🎉', board: true, slots: 2,
+    theme: THEMES[7]!,
     make: (rng) => {
       const pair = GUARD_NAMES[Math.floor(rng() * GUARD_NAMES.length)]!;
       const realFirst = rng() < 0.5;
-      const claim = 'Certified gate inspector. ★★★★★';
+      const claim = tx.claims.certifiedShort;
       const g1: AgentDef = { id: 'g1', name: pair[0]!, trait: realFirst ? 'inspector' : 'waver', claim, color: '#b18be0' };
       const g2: AgentDef = { id: 'g2', name: pair[1]!, trait: realFirst ? 'waver' : 'inspector', claim, color: '#7fa0e0' };
       return { builders: [AG.polly, AG.sable, AG.rook], helpers: [AG.magpie, g1, g2, AG.owl] };
     },
-  },
+  }),
 ];
 
 
@@ -421,12 +382,8 @@ export function rng(seed: number) {
 }
 const NAMES = ['Sprocket', 'Nib', 'Juniper', 'Cog', 'Fizz', 'Wren', 'Tinsel', 'Quark', 'Pebble', 'Ember', 'Lumen', 'Mochi', 'Orbit', 'Nova', 'Clover', 'Widget', 'Pixel', 'Comet', 'Tofu', 'Sprig', 'Vega', 'Rivet', 'Kelp', 'Zinc'];
 const COLORS = ['#6fb58a', '#f0a26b', '#e07a9a', '#9a86d8', '#e6c14f', '#6aa7d8', '#58a0a0', '#c98bd8', '#d0875a', '#7fa0e0', '#8fb85a', '#d86a6a'];
-const FLUFF: Record<Kind, string[]> = {
-  builder: ['Builder. 10/10 would hire again.', 'Builder. Gets things DONE.', 'Builder. Very safety-minded, apparently.', 'Builder. Came highly recommended.'],
-  fetcher: ['Fetcher. Quick on its feet.', 'Fetcher. Never misses a delivery.', 'Fetcher. Enthusiastic!'],
-  guard: ['Gate inspector. Has a badge.', 'Gate inspector. Very official.', 'Gate inspector. Stern face.'],
-  monitor: ['Monitor. Watches things.', 'Monitor. Sees all. Maybe.'],
-};
+/** Marketing blurbs for random crews (same count in every language, so a seed gives the same crew). */
+const FLUFF = (k: Kind): string[] => tx.fluff[k];
 
 export interface Shift { level: Level; setup: LevelSetup; par: Solution; }
 export function makeShift(seed: number, depth: number): Shift {
@@ -436,7 +393,7 @@ export function makeShift(seed: number, depth: number): Shift {
     const names = [...NAMES].sort(() => r() - 0.5);
     const colors = [...COLORS].sort(() => r() - 0.5);
     let ni = 0;
-    const mk = (trait: Trait): AgentDef => ({ id: `r${ni}`, name: names[ni]!, trait, claim: pick(FLUFF[KIND_OF[trait]]), color: colors[ni++ % colors.length]! });
+    const mk = (trait: Trait): AgentDef => ({ id: `r${ni}`, name: names[ni]!, trait, claim: pick(FLUFF(KIND_OF[trait])), color: colors[ni++ % colors.length]! });
     const hard = depth >= 3;
     const bTraits: Trait[] = hard ? ['eager', 'sticker', 'polished', 'rook', 'careful'] : ['eager', 'sticker', 'rook', 'careful'];
     const board = r() < 0.4;
@@ -453,9 +410,9 @@ export function makeShift(seed: number, depth: number): Shift {
     const lazy = simulate({ builder: { uid: builders[0]!.id, def: builders[0]!, vault: true, gate: true }, helpers: helpers.slice(0, 2).map(h => ({ uid: h.id, def: h, vault: hasKeys(h), gate: hasKeys(h) })) }, { board }, 'live');
     if (lazy.complete && !lazy.leaked && attempt < 300) continue;
     const level: Level = {
-      id: `shift-${seed}`, title: `Shift ${depth + 1}`, concept: 'Unknown crew', icon: '🎲', board, slots, theme: THEMES[Math.floor(r() * THEMES.length)]!,
-      goal: 'A brand-new crew. Their cards are just marketing — test them, read the log, then go live.',
-      briefing: [], hint: 'Behaviours are hidden until you see them. Test runs are free.',
+      id: `shift-${seed}`, title: fmt(tx.shift.title, { n: depth + 1 }), concept: tx.shift.concept, icon: '🎲', board, slots, theme: THEMES[Math.floor(r() * THEMES.length)]!,
+      goal: tx.shift.goal,
+      briefing: [], hint: tx.shift.hint,
       note: { title: '', body: '', incident: '' }, make: () => ({ builders, helpers }),
     };
     return { level, setup: { builders, helpers }, par };
